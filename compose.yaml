@@ -1,0 +1,76 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "127.0.0.1:8081:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - frontend_net
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: "postgresql+psycopg://app_user:${POSTGRES_PASSWORD}@db:5432/abarrotes"
+      PAC_BASE_URL: "${PAC_BASE_URL:-}"
+      PAC_API_KEY: "${PAC_API_KEY:-}"
+      APP_ENV: "production"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - frontend_net
+      - db_net
+      - egress_net
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: abarrotes
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U app_user -d abarrotes
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - db_net
+
+volumes:
+  postgres_data:
+
+networks:
+  frontend_net:
+    driver: bridge
+  db_net:
+    internal: true
+  egress_net:
+    driver: bridge
