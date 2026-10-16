@@ -1,0 +1,254 @@
+body {
+    background-color: #1f1f1f;
+    color: #eaeaea;
+}
+
+#sidebar {
+    width: 250px;
+    background-color: #141414;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    padding-top: 20px;
+    transition: all 0.3s;
+}
+
+#sidebar.collapsed {
+    width: 80px;
+}
+
+#sidebar .menu-item {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    color: #ccc;
+}
+
+#sidebar .menu-item:hover {
+    background-color: #2a2a2a;
+}
+
+#sidebar.collapsed .menu-text {
+    display: none;
+}
+
+#main {
+    margin-left: 250px;
+    transition: margin-left 0.3s;
+}
+
+#sidebar.collapsed + #main {
+    margin-left: 80px;
+}
+
+.product-card {
+    background-color: #2a2a2a;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.product-card:hover {
+    background-color: #3a3a3a;
+}
+
+.product-card img {
+    width: 80px;
+    margin-bottom: 10px;
+}
+
+#cart-area {
+    background-color: #2a2a2a;
+    padding: 20px;
+    border-radius: 10px;
+    height: 90vh;
+    position: sticky;
+    top: 20px;
+}
+
+.product-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 12px;
+}
+
+.product-cell {
+    background-color: #2a2a2a;
+    color: #eaeaea;
+    padding: 10px;
+    text-align: center;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 14%;
+    height: 180px;
+    vertical-align: top;
+    transition: background-color 0.2s;
+}
+
+.product-cell:hover {
+    background-color: #3a3a3a;
+}
+
+.product-img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 8px;
+}
+
+.product-name {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.product-price {
+    font-size: 13px;
+    color: #9ad17b;
+    margin-bottom: 4px;
+}
+
+.product-barcode {
+    font-size: 11px;
+    color: #bbbbbb;
+}
+
+.product-cell.empty {
+    background-color: #1a1a1a;
+    color: #555;
+    cursor: default;
+}
+
+.qty-box {
+    display: flex;
+    align-items: center;
+    background-color: #333;
+    border-radius: 6px;
+    padding: 4px 8px;
+    gap: 6px;
+}
+
+.qty-number {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    width: 20px;
+    text-align: center;
+}
+
+.qty-btn {
+    background-color: #555;
+    border: none;
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    line-height: 20px;
+    text-align: center;
+}
+
+.qty-btn:hover {
+    background-color: #777;
+}
+
+.cart-item {
+    background-color: #6b989b !important;   /* fondo oscuro */
+    border: 1px solid #444 !important;      /* borde oscuro */
+    color: #eaeaea !important;              /* texto claro */
+}
+
+.payment-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.payment-window {
+    background-color: #1f1f1f;
+    color: #eaeaea;
+    padding: 25px;
+    width: 420px;
+    border-radius: 12px;
+}
+
+.payment-title {
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+.payment-total {
+    background-color: #2a2a2a;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn-tip {
+    width: 100%;
+    background-color: #3a6ea5;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    margin-bottom: 20px;
+}
+
+.payment-cash input {
+    width: 100%;
+    background-color: #2a2a2a;
+    color: #fff;
+    border: 1px solid #444;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.cash-buttons button {
+    background-color: #3a6ea5;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    margin-right: 10px;
+}
+
+.payment-methods {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.method {
+    background-color: #2a2a2a;
+    color: #eaeaea;
+    border: 1px solid #444;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.btn-close {
+    width: 100%;
+    background-color: #e53935;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    margin-top: 20px;
+}

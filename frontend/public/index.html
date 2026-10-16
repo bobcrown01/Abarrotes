@@ -3,69 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abarrotes POS</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 60px auto;
-            padding: 20px;
-            background: #f4f6f8;
-            color: #263238;
-        }
+    <title>POS Dashboard Offline</title>
 
-        main {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px #00000015;
-        }
+    <!-- Bootstrap local -->
+    <link rel="stylesheet" href="static/css/bootstrap.css">
 
-        button {
-            padding: 10px 18px;
-            background: #1976d2;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+    <link rel="stylesheet" href="static/css/pos.css">
 
-        #resultado {
-            margin-top: 20px;
-            font-weight: bold;
-        }
-    </style>
+    <!-- FontAwesome local -->
+    <link rel="stylesheet" href="static/fontawesome/css/all.min.css">
+
 </head>
+
 <body>
-    <main>
-        <h1>Abarrotes POS</h1>
-        <p>Sistema de punto de venta para tu tienda.</p>
 
-        <button id="btnBackend">Verificar conexión con el backend</button>
+    <div id="sidebar">
+        <div class="menu-item" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars"></i>
+            <span class="menu-text">Menú</span>
+        </div>
 
-        <p id="resultado">Frontend iniciado. Esperando prueba...</p>
-    </main>
+        <div class="menu-item"><i class="fa-solid fa-cash-register"></i><span class="menu-text">Vender</span></div>
+        <div class="menu-item"><i class="fa-solid fa-house"></i><span class="menu-text">Inicio</span></div>
+        <div class="menu-item"><i class="fa-solid fa-box"></i><span class="menu-text">Productos</span></div>
+        <div class="menu-item"><i class="fa-solid fa-users"></i><span class="menu-text">Clientes</span></div>
+        <div class="menu-item"><i class="fa-solid fa-gear"></i><span class="menu-text">Configuración</span></div>
+    </div>
+
+    <div id="main" class="container-fluid">
+
+        <div class="row mt-4">
+
+            <div class="col-md-3">
+                <div id="cart-area">
+                    <h4 class="mb-3"><i class="fa-solid fa-cart-shopping"></i> Venta</h4>
+                    <p class="text-secondary">Carrito vacío</p>
+                </div>
+            </div>
+        
+
+            <div class="col-md-8">
+                <table class="product-table" id="productTable">
+                    <tbody></tbody>
+                </table>
+            </div>
+            <script src="static/js/products.js"></script>
+        </div>
+
+    </div>
+
+    <script src="static/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        document.getElementById("btnBackend").addEventListener("click", async () => {
-            const resultado = document.getElementById("resultado");
-            resultado.textContent = "Conectando con el backend...";
-
-            try {
-                const respuesta = await fetch("/api/health");
-
-                if (!respuesta.ok) {
-                    throw new Error(`HTTP ${respuesta.status}`);
-                }
-
-                const datos = await respuesta.json();
-                resultado.textContent =
-                    `Backend conectado correctamente: ${datos.status}`;
-            } catch (error) {
-                resultado.textContent =
-                    `Error de conexión: ${error.message}`;
-            }
-        });
+        function toggleSidebar() {
+            document.getElementById("sidebar").classList.toggle("collapsed");
+        }
     </script>
+
 </body>
 </html>
