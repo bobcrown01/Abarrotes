@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.routes.products import router as products_router
 from app.routes.inventory import router as inventory_router
 from app.routes.users import router as users_router
+from app.routes.sales import router as sales_router
 
 from app.database import engine
 
@@ -11,6 +12,7 @@ app = FastAPI(title="Abarrotes POS API")
 app.include_router(products_router)
 app.include_router(inventory_router)
 app.include_router(users_router)
+app.include_router(sales_router)
 
 @app.get("/api/health")
 def health():
