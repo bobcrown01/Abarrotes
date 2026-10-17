@@ -1,0 +1,95 @@
+"""Fixtures compartidas: repositorios en memoria y cliente HTTP de prueba.
+
+Las pruebas no necesitan PostgreSQL: el servicio recibe repositorios falsos
+que cumplen los mismos protocolos que los reales.
+"""
+
+import os
+from collections.abc import Iterator, Sequence
+
+# Debe definirse antes de importar la app; create_engine no se conecta.
+os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://test:test@localhost:5432/test")
+os.environ.setdefault("APP_ENV", "test")
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.main import app
+from app.models.products import Category, Product
+from app.routes.products import get_product_service
+from app.services.product_service import ProductService
+
+
+class FakeCategoryRepository:
+    def __init__(self, categories: list[Category]) -> None:
+        self.categories = categories
+
+    def list_all(self) -> Sequence[Category]:
+        return sorted(self.categories, key=lambda c: c.name)
+
+    def exists(self, category_id: int) -> bool:
+        return any(c.id == category_id for c in self.categories)
+
+
+class FakeProductRepository:
+    def __init__(self) -> None:
+        self.products: list[Product] = []
+
+    def list_all(self) -> Sequence[Product]:
+        return sorted(self.products, key=lambda p: p.id, reverse=True)
+
+    def search(self, query: str, limit: int, offset: int) -> Sequence[Product]:
+        q = query.lower()
+        found = [
+            p
+            for p in self.products
+            if any(q in (v or "").lower() for v in (p.name, p.barcode, p.sku))
+        ]
+        return found[offset : offset + limit]
+
+    def barcode_exists(self, barcode: str) -> bool:
+        return any(p.barcode == barcode for p in self.products)
+
+    def add(self, product: Product) -> Product:
+        product.id = len(self.products) + 1
+        self.products.append(product)
+        return product
+
+
+@pytest.fixture
+def categories() -> FakeCategoryRepository:
+    return FakeCategoryRepository(
+        [Category(id=1, name="Abarrotes"), Category(id=2, name="Bebidas")]
+    )
+
+
+@pytest.fixture
+def products() -> FakeProductRepository:
+    return FakeProductRepository()
+
+
+@pytest.fixture
+def service(products: FakeProductRepository, categories: FakeCategoryRepository) -> ProductService:
+    return ProductService(products, categories)
+
+
+@pytest.fixture
+def client(service: ProductService) -> Iterator[TestClient]:
+    app.dependency_overrides[get_product_service] = lambda: service
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def valid_payload() -> dict[str, object]:
+    return {
+        "name": "Coca Cola 600ml",
+        "barcode": "7501234567890",
+        "sku": "COCA600",
+        "category_id": 2,
+        "price": 18.50,
+        "cost": 12.00,
+        "unit": "pieza",
+        "is_active": True,
+    }

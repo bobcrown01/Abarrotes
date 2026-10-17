@@ -1,69 +1,64 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import or_, text
+"""Endpoints HTTP del catálogo de productos y categorías.
+
+Los handlers solo traducen HTTP ↔ servicio; la lógica vive en
+:mod:`app.services.product_service`.
+"""
+
+from collections.abc import Sequence
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.models.products import Product
-from app.schemas.product import ProductCreate
-from app.schemas.product import ProductOut
+from app.models.products import Category, Product
+from app.repositories.product_repository import CategoryRepository, ProductRepository
+from app.schemas.product import CategoryOut, ProductCreate, ProductOut
+from app.services.product_service import ProductService
 
-router = APIRouter()
+router = APIRouter(tags=["productos"])
 
-@router.post("/products")
-def create_product(product: ProductCreate, db: Session = Depends(get_db)):
 
-    # Validar que la categoría exista
-    category_exists = db.execute(
-        text("SELECT id FROM categories WHERE id = :id"),
-        {"id": product.category_id}
-    ).fetchone()
+def get_product_service(db: Annotated[Session, Depends(get_db)]) -> ProductService:
+    """Arma el servicio de productos con sus repositorios.
 
-    if not category_exists:
-        raise HTTPException(status_code=400, detail="La categoría no existe")
+    Args:
+        db: Sesión de la petición.
+    """
+    return ProductService(ProductRepository(db), CategoryRepository(db))
 
-    new_product = Product(
-        name=product.name,
-        barcode=product.barcode,
-        sku=product.sku,
-        category_id=product.category_id,
-        price=product.price,
-        cost=product.cost,
-        unit=product.unit,
-        is_active=product.is_active
-    )
 
-    db.add(new_product)
-    db.commit()
-    db.refresh(new_product)
+ProductServiceDep = Annotated[ProductService, Depends(get_product_service)]
 
-    return {
-        "status": "success",
-        "message": "Producto creado correctamente",
-        "product_id": new_product.id
-    }
+
+@router.get("/categories", response_model=list[CategoryOut])
+def list_categories(service: ProductServiceDep) -> Sequence[Category]:
+    """Lista las categorías ordenadas por nombre."""
+    return service.list_categories()
+
+
+@router.post("/products", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
+def create_product(data: ProductCreate, service: ProductServiceDep) -> Product:
+    """Da de alta un producto.
+
+    Responde 400 si la categoría no existe y 409 si el código de barras ya
+    está registrado.
+    """
+    return service.create_product(data)
+
 
 @router.get("/products", response_model=list[ProductOut])
-def get_all_products(db: Session = Depends(get_db)):
-    products = db.query(Product).all()
-    return products
+def list_products(service: ProductServiceDep) -> Sequence[Product]:
+    """Lista todos los productos, los más recientes primero."""
+    return service.list_products()
+
 
 @router.get("/products/search", response_model=list[ProductOut])
 def search_products(
-    q: str,
-    db: Session = Depends(get_db),
-    limit: int = 50,
-    offset: int = 0
-):
-    """
-    Busca productos por nombre, barcode o SKU.
-    Soporta coincidencias parciales.
-    """
-
-    query = db.query(Product).filter(
-        or_(
-            Product.name.ilike(f"%{q}%"),
-            Product.barcode.ilike(f"%{q}%"),
-            Product.sku.ilike(f"%{q}%")
-        )
-    ).limit(limit).offset(offset)
-
-    return query.all()
+    service: ProductServiceDep,
+    q: Annotated[str, Query(min_length=1, max_length=100)],
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> Sequence[Product]:
+    """Busca productos por nombre, código de barras o SKU (coincidencia parcial)."""
+    return service.search_products(q, limit, offset)

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos · Abarrotes POS</title>
+
+    <link rel="stylesheet" href="static/css/app.css">
+    <link rel="stylesheet" href="static/fontawesome/css/all.min.css">
+
+    <script type="module" src="static/js/products/products-page.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+
+    <aside class="app-sidebar">
+        <div class="brand">
+            <span class="brand-logo" aria-hidden="true"><i class="fa-solid fa-store"></i></span>
+            <span class="brand-name">Abarrotes</span>
+        </div>
+
+        <nav aria-label="Menú principal">
+            <a class="nav-item" href="index.html" aria-label="Vender"><i class="fa-solid fa-cash-register" aria-hidden="true"></i><span>Vender</span></a>
+            <a class="nav-item" href="#" aria-label="Inicio"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Inicio</span></a>
+            <a class="nav-item" href="productos.html" aria-label="Productos" aria-current="page"><i class="fa-solid fa-box" aria-hidden="true"></i><span>Productos</span></a>
+            <a class="nav-item" href="#" aria-label="Clientes"><i class="fa-solid fa-users" aria-hidden="true"></i><span>Clientes</span></a>
+            <a class="nav-item" href="#" aria-label="Configuración"><i class="fa-solid fa-gear" aria-hidden="true"></i><span>Configuración</span></a>
+        </nav>
+    </aside>
+
+    <main class="app-main" id="main">
+
+        <header class="page-header">
+            <div>
+                <h1>Productos</h1>
+                <p class="page-subtitle" id="productCount" aria-live="polite">Cargando…</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="btnNewProduct">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Nuevo producto
+            </button>
+        </header>
+
+        <section class="card" aria-labelledby="catalogTitle">
+            <h2 class="visually-hidden" id="catalogTitle">Catálogo</h2>
+
+            <div class="toolbar" role="search">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <label class="visually-hidden" for="searchInput">Buscar productos</label>
+                    <input type="search" id="searchInput" placeholder="Buscar por nombre, código o SKU" autocomplete="off">
+                </div>
+                <label class="visually-hidden" for="categoryFilter">Filtrar por categoría</label>
+                <select id="categoryFilter" class="input select-filter">
+                    <option value="">Todas las categorías</option>
+                </select>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table" id="productTable" aria-busy="true">
+                    <caption class="visually-hidden">Lista de productos</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Categoría</th>
+                            <th scope="col">Código de barras</th>
+                            <th scope="col">SKU</th>
+                            <th scope="col" class="num">Costo</th>
+                            <th scope="col" class="num">Precio</th>
+                            <th scope="col">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productRows"></tbody>
+                </table>
+                <div class="empty-state" id="emptyState" hidden>
+                    <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+                    <p></p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Panel lateral: nuevo producto -->
+    <div class="drawer-overlay" id="drawerOverlay" hidden></div>
+    <div class="drawer" id="productDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+        <form id="productForm" novalidate>
+            <div class="drawer-header">
+                <h2 id="drawerTitle">Nuevo producto</h2>
+                <button type="button" class="icon-btn" id="btnCloseDrawer" aria-label="Cerrar">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="drawer-body">
+                <div class="alert alert-error" id="formError" role="alert" hidden></div>
+
+                <fieldset>
+                    <legend class="section-title">Información general</legend>
+
+                    <div class="field">
+                        <label for="fName">Nombre <span aria-hidden="true">*</span></label>
+                        <input class="input" id="fName" name="name" maxlength="150" required placeholder="Ej. Coca Cola 600ml">
+                    </div>
+
+                    <div class="field">
+                        <label for="fCategory">Categoría <span aria-hidden="true">*</span></label>
+                        <select class="input" id="fCategory" name="category_id" required>
+                            <option value="">Selecciona una categoría</option>
+                        </select>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="fBarcode">Código de barras</label>
+                            <input class="input" id="fBarcode" name="barcode" maxlength="50" inputmode="numeric" placeholder="7501234567890">
+                        </div>
+                        <div class="field">
+                            <label for="fSku">SKU</label>
+                            <input class="input" id="fSku" name="sku" maxlength="50" placeholder="COCA600">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend class="section-title">Precio</legend>
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="fPrice">Precio de venta <span aria-hidden="true">*</span></label>
+                            <div class="input-prefix">
+                                <span aria-hidden="true">$</span>
+                                <input class="input" id="fPrice" name="price" type="number" step="0.01" min="0" inputmode="decimal" required placeholder="0.00" aria-describedby="marginHint">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="fCost">Costo</label>
+                            <div class="input-prefix">
+                                <span aria-hidden="true">$</span>
+                                <input class="input" id="fCost" name="cost" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" aria-describedby="marginHint">
+                            </div>
+                        </div>
+                    </div>
+                    <p class="hint" id="marginHint" aria-live="polite"></p>
+
+                    <div class="field">
+                        <label for="fUnit">Unidad de venta</label>
+                        <select class="input" id="fUnit" name="unit">
+                            <option value="pieza">Pieza</option>
+                            <option value="kg">Kilogramo</option>
+                            <option value="litro">Litro</option>
+                            <option value="paquete">Paquete</option>
+                            <option value="caja">Caja</option>
+                        </select>
+                    </div>
+
+                    <label class="switch">
+                        <input type="checkbox" name="is_active" role="switch" checked>
+                        <span class="slider" aria-hidden="true"></span>
+                        <span>Producto activo</span>
+                    </label>
+                </fieldset>
+            </div>
+
+            <div class="drawer-footer">
+                <button type="button" class="btn btn-ghost" id="btnCancel">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btnSave">Guardar producto</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
