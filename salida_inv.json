@@ -1,0 +1,7 @@
+{
+    "product_id": 1,
+    "type": "salida",
+    "quantity": 2,
+    "reason": "Venta mostrador",
+    "user_id": 1
+}

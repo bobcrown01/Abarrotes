@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import text
+from sqlalchemy import or_, text
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.products import Product
@@ -45,3 +45,25 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
 def get_all_products(db: Session = Depends(get_db)):
     products = db.query(Product).all()
     return products
+
+@router.get("/products/search", response_model=list[ProductOut])
+def search_products(
+    q: str,
+    db: Session = Depends(get_db),
+    limit: int = 50,
+    offset: int = 0
+):
+    """
+    Busca productos por nombre, barcode o SKU.
+    Soporta coincidencias parciales.
+    """
+
+    query = db.query(Product).filter(
+        or_(
+            Product.name.ilike(f"%{q}%"),
+            Product.barcode.ilike(f"%{q}%"),
+            Product.sku.ilike(f"%{q}%")
+        )
+    ).limit(limit).offset(offset)
+
+    return query.all()

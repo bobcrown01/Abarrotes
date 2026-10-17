@@ -1,0 +1,7 @@
+{
+    "product_id": 1,
+    "type": "entrada",
+    "quantity": 20,
+    "reason": "Compra proveedor",
+    "user_id": 1
+}
