@@ -1,10 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+from app.routes.products import router as products_router
 
 from app.database import engine
 
 app = FastAPI(title="Abarrotes POS API")
+app.include_router(products_router)
 
 @app.get("/api/health")
 def health():
