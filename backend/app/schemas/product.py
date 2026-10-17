@@ -1,17 +1,10 @@
 """Esquemas Pydantic de entrada y salida para productos y categorías."""
 
-from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-# Dinero: se valida como Decimal (sin errores de redondeo de float) con dos
-# decimales y se envía al frontend como número JSON.
-Money = Annotated[
-    Decimal,
-    Field(ge=0, max_digits=12, decimal_places=2),
-    PlainSerializer(float, return_type=float, when_used="json"),
-]
+from app.schemas.common import Money
 
 Unit = Literal["pieza", "kg", "litro", "paquete", "caja"]
 

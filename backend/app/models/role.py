@@ -1,8 +1,15 @@
-from sqlalchemy import Column, Integer, String
+"""Modelo ORM de roles de usuario."""
+
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
+
 from app.database import Base
 
+
 class Role(Base):
+    """Rol de usuario: admin, cajero o supervisor."""
+
     __tablename__ = "roles"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)

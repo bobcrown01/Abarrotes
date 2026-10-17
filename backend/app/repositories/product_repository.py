@@ -88,6 +88,14 @@ class ProductRepository:
         )
         return self._db.scalars(statement).all()
 
+    def get(self, product_id: int) -> Product | None:
+        """Busca un producto por id.
+
+        Args:
+            product_id: Id del producto.
+        """
+        return self._db.get(Product, product_id)
+
     def barcode_exists(self, barcode: str) -> bool:
         """Indica si algún producto ya usa ese código de barras.
 

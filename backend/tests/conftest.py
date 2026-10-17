@@ -6,6 +6,7 @@ que cumplen los mismos protocolos que los reales.
 
 import os
 from collections.abc import Iterator, Sequence
+from decimal import Decimal
 
 # Debe definirse antes de importar la app; create_engine no se conecta.
 os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://test:test@localhost:5432/test")
@@ -13,11 +14,18 @@ os.environ.setdefault("APP_ENV", "test")
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
+from app.database import Base, get_db
 from app.main import app
 from app.models.products import Category, Product
-from app.routes.products import get_product_service
+from app.models.role import Role
+from app.models.user import User
+from app.routes.dependencies import get_product_service
 from app.services.product_service import ProductService
+from app.utils.security import hash_password
 
 
 class FakeCategoryRepository:
@@ -76,6 +84,44 @@ def service(products: FakeProductRepository, categories: FakeCategoryRepository)
 @pytest.fixture
 def client(service: ProductService) -> Iterator[TestClient]:
     app.dependency_overrides[get_product_service] = lambda: service
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+# ---------- Base de datos real (SQLite en memoria) ----------
+# Prueba repositorios + servicios + rutas juntos. SQLite ignora FOR UPDATE;
+# los bloqueos solo se ejercitan contra PostgreSQL.
+
+
+@pytest.fixture
+def db_session() -> Iterator[Session]:
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)()
+
+    session.add_all(
+        [
+            Category(id=1, name="Bebidas"),
+            Role(id=1, name="cajero"),
+            User(id=1, username="caja1", password_hash=hash_password("secreto123"), role_id=1),
+            Product(id=1, name="Coca Cola 600ml", category_id=1, price=Decimal("18.50")),
+            Product(id=2, name="Sabritas", category_id=1, price=Decimal("21.00")),
+            Product(id=3, name="Descontinuado", category_id=1, price=Decimal("5"), is_active=False),
+        ]
+    )
+    session.commit()
+
+    yield session
+    session.close()
+    engine.dispose()
+
+
+@pytest.fixture
+def db_client(db_session: Session) -> Iterator[TestClient]:
+    app.dependency_overrides[get_db] = lambda: db_session
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

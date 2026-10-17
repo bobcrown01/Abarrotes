@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 
-from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Boolean, ForeignKey, Index, Integer, Numeric, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -21,6 +21,16 @@ class Product(Base):
     """Producto vendible del catálogo."""
 
     __tablename__ = "products"
+    __table_args__ = (
+        # Igual que en schema.sql: el código no se repite, pero puede faltar
+        Index(
+            "products_barcode_key",
+            "barcode",
+            unique=True,
+            postgresql_where=text("barcode IS NOT NULL"),
+            sqlite_where=text("barcode IS NOT NULL"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)

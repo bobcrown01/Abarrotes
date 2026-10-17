@@ -15,9 +15,9 @@ select = ["E", "W", "F", "I", "UP", "B", "S", "D", "ANN"]
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-# En pruebas se permite assert y no se exigen docstrings ni anotaciones;
+# En pruebas se permite assert y contraseñas fijas, sin docstrings ni anotaciones;
 # conftest define variables de entorno antes de importar la app (E402)
-"tests/**" = ["S101", "D", "ANN", "E402"]
+"tests/**" = ["S101", "S105", "S106", "D", "ANN", "E402"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

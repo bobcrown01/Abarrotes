@@ -7,28 +7,13 @@ Los handlers solo traducen HTTP ↔ servicio; la lógica vive en
 from collections.abc import Sequence
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Query, status
 
-from app.database import get_db
 from app.models.products import Category, Product
-from app.repositories.product_repository import CategoryRepository, ProductRepository
+from app.routes.dependencies import ProductServiceDep
 from app.schemas.product import CategoryOut, ProductCreate, ProductOut
-from app.services.product_service import ProductService
 
 router = APIRouter(tags=["productos"])
-
-
-def get_product_service(db: Annotated[Session, Depends(get_db)]) -> ProductService:
-    """Arma el servicio de productos con sus repositorios.
-
-    Args:
-        db: Sesión de la petición.
-    """
-    return ProductService(ProductRepository(db), CategoryRepository(db))
-
-
-ProductServiceDep = Annotated[ProductService, Depends(get_product_service)]
 
 
 @router.get("/categories", response_model=list[CategoryOut])
