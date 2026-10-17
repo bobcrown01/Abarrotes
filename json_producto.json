@@ -1,0 +1,10 @@
+{
+    "name": "Coca Cola 600ml",
+    "barcode": "7501234567890",
+    "sku": "COCA600",
+    "category_id": 2,
+    "price": 18.50,
+    "cost": 12.00,
+    "unit": "pieza",
+    "is_active": true
+}
