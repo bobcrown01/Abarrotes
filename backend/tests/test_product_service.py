@@ -45,7 +45,7 @@ def test_database_unique_violation_becomes_duplicate_error(categories, valid_pay
     class RacingRepository:
         """Simula que otra alta guardó el mismo código entre la validación y el insert."""
 
-        def barcode_exists(self, barcode: str) -> bool:
+        def barcode_exists(self, barcode: str, exclude_id: int | None = None) -> bool:
             return False
 
         def add(self, product: Product) -> Product:

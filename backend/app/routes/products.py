@@ -2,6 +2,9 @@
 
 Los handlers solo traducen HTTP ↔ servicio; la lógica vive en
 :mod:`app.services.product_service`.
+
+Importante: las rutas fijas (``/products/search``, ``/products/filter``) van
+antes que ``/products/{product_id}``; FastAPI prueba las rutas en orden.
 """
 
 from collections.abc import Sequence
@@ -11,7 +14,13 @@ from fastapi import APIRouter, Query, status
 
 from app.models.products import Category, Product
 from app.routes.dependencies import ProductServiceDep
-from app.schemas.product import CategoryOut, ProductCreate, ProductOut
+from app.schemas.product import (
+    CategoryOut,
+    ProductCreate,
+    ProductFilters,
+    ProductOut,
+    ProductUpdate,
+)
 
 router = APIRouter(tags=["productos"])
 
@@ -47,3 +56,33 @@ def search_products(
 ) -> Sequence[Product]:
     """Busca productos por nombre, código de barras o SKU (coincidencia parcial)."""
     return service.search_products(q, limit, offset)
+
+
+@router.get("/products/filter", response_model=list[ProductOut])
+def filter_products(
+    service: ProductServiceDep, filters: Annotated[ProductFilters, Query()]
+) -> Sequence[Product]:
+    """Filtra por texto, categoría, estado, rango de precio y existencias."""
+    return service.filter_products(filters)
+
+
+@router.get("/products/{product_id}", response_model=ProductOut)
+def get_product(product_id: int, service: ProductServiceDep) -> Product:
+    """Regresa un producto. Responde 404 si no existe."""
+    return service.get_product(product_id)
+
+
+@router.put("/products/{product_id}", response_model=ProductOut)
+def update_product(product_id: int, data: ProductUpdate, service: ProductServiceDep) -> Product:
+    """Actualiza solo los campos enviados.
+
+    Responde 404 si el producto no existe, 400 si la categoría no existe y
+    409 si el código de barras ya lo usa otro producto.
+    """
+    return service.update_product(product_id, data)
+
+
+@router.delete("/products/{product_id}", response_model=ProductOut)
+def deactivate_product(product_id: int, service: ProductServiceDep) -> Product:
+    """Desactiva el producto (no lo borra) y lo regresa actualizado."""
+    return service.deactivate_product(product_id)

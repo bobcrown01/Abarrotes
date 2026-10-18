@@ -55,13 +55,22 @@ class FakeProductRepository:
         ]
         return found[offset : offset + limit]
 
-    def barcode_exists(self, barcode: str) -> bool:
-        return any(p.barcode == barcode for p in self.products)
+    def get(self, product_id: int) -> Product | None:
+        return next((p for p in self.products if p.id == product_id), None)
+
+    def barcode_exists(self, barcode: str, exclude_id: int | None = None) -> bool:
+        return any(p.barcode == barcode and p.id != exclude_id for p in self.products)
 
     def add(self, product: Product) -> Product:
         product.id = len(self.products) + 1
         self.products.append(product)
         return product
+
+    def save(self, product: Product) -> Product:
+        return product
+
+    def filter(self, filters):  # Los filtros se prueban contra SQLite
+        raise NotImplementedError
 
 
 @pytest.fixture

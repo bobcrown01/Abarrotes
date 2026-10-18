@@ -6,11 +6,13 @@ repositorios y así se pueden probar con implementaciones falsas.
 
 from collections.abc import Sequence
 
-from sqlalchemy import or_, select
+from sqlalchemy import ColumnElement, or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.models.inventory import Inventory
 from app.models.products import Category, Product
+from app.schemas.product import ProductFilters
 
 
 def _escape_like(text: str) -> str:
@@ -23,6 +25,20 @@ def _escape_like(text: str) -> str:
         Texto con la barra invertida, ``%`` y ``_`` escapados.
     """
     return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def _matches_text(query: str) -> ColumnElement[bool]:
+    """Condición de coincidencia parcial en nombre, código de barras o SKU.
+
+    Args:
+        query: Texto escrito por el usuario.
+    """
+    pattern = f"%{_escape_like(query)}%"
+    return or_(
+        Product.name.ilike(pattern, escape="\\"),
+        Product.barcode.ilike(pattern, escape="\\"),
+        Product.sku.ilike(pattern, escape="\\"),
+    )
 
 
 class CategoryRepository:
@@ -72,20 +88,41 @@ class ProductRepository:
             limit: Máximo de resultados.
             offset: Resultados a saltar (paginación).
         """
-        pattern = f"%{_escape_like(query)}%"
         statement = (
             select(Product)
-            .where(
-                or_(
-                    Product.name.ilike(pattern, escape="\\"),
-                    Product.barcode.ilike(pattern, escape="\\"),
-                    Product.sku.ilike(pattern, escape="\\"),
-                )
-            )
+            .where(_matches_text(query))
             .order_by(Product.name)
             .limit(limit)
             .offset(offset)
         )
+        return self._db.scalars(statement).all()
+
+    def filter(self, filters: ProductFilters) -> Sequence[Product]:
+        """Busca productos combinando los filtros indicados (AND).
+
+        Args:
+            filters: Filtros validados; los que valen ``None`` no se aplican.
+        """
+        statement = select(Product)
+
+        if filters.search:
+            statement = statement.where(_matches_text(filters.search))
+        if filters.category_id is not None:
+            statement = statement.where(Product.category_id == filters.category_id)
+        if filters.active is not None:
+            statement = statement.where(Product.is_active == filters.active)
+        if filters.min_price is not None:
+            statement = statement.where(Product.price >= filters.min_price)
+        if filters.max_price is not None:
+            statement = statement.where(Product.price <= filters.max_price)
+        if filters.in_stock is not None:
+            # Solo productos con fila de inventario: los que no llevan control
+            # de existencias no cuentan como "con" ni "sin" stock
+            statement = statement.join(Inventory, Inventory.product_id == Product.id)
+            in_stock = Inventory.quantity > 0
+            statement = statement.where(in_stock if filters.in_stock else ~in_stock)
+
+        statement = statement.order_by(Product.name).limit(filters.limit).offset(filters.offset)
         return self._db.scalars(statement).all()
 
     def get(self, product_id: int) -> Product | None:
@@ -96,14 +133,17 @@ class ProductRepository:
         """
         return self._db.get(Product, product_id)
 
-    def barcode_exists(self, barcode: str) -> bool:
+    def barcode_exists(self, barcode: str, exclude_id: int | None = None) -> bool:
         """Indica si algún producto ya usa ese código de barras.
 
         Args:
             barcode: Código de barras a revisar.
+            exclude_id: Producto que no cuenta (el que se está editando).
         """
-        statement = select(Product.id).where(Product.barcode == barcode).limit(1)
-        return self._db.scalar(statement) is not None
+        statement = select(Product.id).where(Product.barcode == barcode)
+        if exclude_id is not None:
+            statement = statement.where(Product.id != exclude_id)
+        return self._db.scalar(statement.limit(1)) is not None
 
     def add(self, product: Product) -> Product:
         """Guarda un producto nuevo y confirma la transacción.
@@ -119,6 +159,20 @@ class ProductRepository:
                 (p. ej. código de barras duplicado por una alta simultánea).
         """
         self._db.add(product)
+        return self.save(product)
+
+    def save(self, product: Product) -> Product:
+        """Confirma los cambios de un producto y lo recarga de la base.
+
+        Args:
+            product: Producto nuevo o modificado.
+
+        Returns:
+            El mismo producto con los valores guardados.
+
+        Raises:
+            sqlalchemy.exc.IntegrityError: Si la base rechaza los cambios.
+        """
         try:
             self._db.commit()
         except SQLAlchemyError:
