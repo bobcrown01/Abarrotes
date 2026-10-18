@@ -4,8 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.products import Product
 from app.models.inventory import Inventory
-from app.schemas.product import ProductCreate
-from app.schemas.product import ProductOut
+from app.schemas.product import ProductCreate, ProductOut, ProductUpdate
 
 router = APIRouter()
 
@@ -112,3 +111,45 @@ def filter_products(
             query = query.filter(Inventory.quantity <= 0)
 
     return query.limit(limit).offset(offset).all()
+
+@router.put("/products/{product_id}", response_model=ProductOut)
+def update_product(product_id: int, data: ProductUpdate, db: Session = Depends(get_db)):
+
+    product = db.query(Product).filter(Product.id == product_id).first()
+
+    if not product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+
+    # Actualizar solo los campos enviados
+    update_data = data.dict(exclude_unset=True)
+
+    for field, value in update_data.items():
+        setattr(product, field, value)
+
+    db.commit()
+    db.refresh(product)
+
+    return product
+
+@router.delete("/products/{product_id}")
+def deactivate_product(product_id: int, db: Session = Depends(get_db)):
+
+    product = db.query(Product).filter(Product.id == product_id).first()
+
+    if not product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+
+    product.is_active = False
+
+    db.commit()
+
+    return {"status": "success", "message": "Producto desactivado"}
+
+@router.get("/products/{product_id}", response_model=ProductOut)
+def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id).first()
+
+    if not product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+
+    return product

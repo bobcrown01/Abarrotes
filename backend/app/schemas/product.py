@@ -21,3 +21,13 @@ class ProductOut(BaseModel):
     cost: Optional[float]
     unit: Optional[str]
     is_active: bool
+
+class ProductUpdate(BaseModel):
+    name: Optional[str]
+    barcode: Optional[str]
+    sku: Optional[str]
+    category_id: Optional[int]
+    price: Optional[float]
+    cost: Optional[float]
+    unit: Optional[str]
+    is_active: Optional[bool]
