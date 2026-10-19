@@ -1,155 +1,98 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import or_, text
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models.products import Product
-from app.models.inventory import Inventory
-from app.schemas.product import ProductCreate, ProductOut, ProductUpdate
+"""Endpoints HTTP del catálogo de productos y categorías.
 
-router = APIRouter()
+Los handlers solo traducen HTTP ↔ servicio; la lógica vive en
+:mod:`app.services.product_service`.
 
-@router.post("/products")
-def create_product(product: ProductCreate, db: Session = Depends(get_db)):
+Importante: las rutas fijas (``/products/search``, ``/products/filter``) van
+antes que ``/products/{product_id}``; FastAPI prueba las rutas en orden.
+"""
 
-    # Validar que la categoría exista
-    category_exists = db.execute(
-        text("SELECT id FROM categories WHERE id = :id"),
-        {"id": product.category_id}
-    ).fetchone()
+from collections.abc import Sequence
+from typing import Annotated
 
-    if not category_exists:
-        raise HTTPException(status_code=400, detail="La categoría no existe")
+from fastapi import APIRouter, Query, status
 
-    new_product = Product(
-        name=product.name,
-        barcode=product.barcode,
-        sku=product.sku,
-        category_id=product.category_id,
-        price=product.price,
-        cost=product.cost,
-        unit=product.unit,
-        is_active=product.is_active
-    )
+from app.models.products import Category, Product
+from app.routes.dependencies import ProductServiceDep
+from app.schemas.product import (
+    CategoryOut,
+    ProductCreate,
+    ProductFilters,
+    ProductOut,
+    ProductUpdate,
+)
 
-    db.add(new_product)
-    db.commit()
-    db.refresh(new_product)
+router = APIRouter(tags=["productos"])
 
-    return {
-        "status": "success",
-        "message": "Producto creado correctamente",
-        "product_id": new_product.id
-    }
+
+@router.get("/categories", response_model=list[CategoryOut])
+def list_categories(service: ProductServiceDep) -> Sequence[Category]:
+    """Lista las categorías ordenadas por nombre."""
+    return service.list_categories()
+
+
+@router.post("/products", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
+def create_product(data: ProductCreate, service: ProductServiceDep) -> Product:
+    """Da de alta un producto.
+
+    Responde 400 si la categoría no existe y 409 si el código de barras ya
+    está registrado.
+    """
+    return service.create_product(data)
+
 
 @router.get("/products", response_model=list[ProductOut])
-def get_all_products(db: Session = Depends(get_db)):
-    products = db.query(Product).all()
-    return products
+def list_products(service: ProductServiceDep) -> Sequence[Product]:
+    """Lista todos los productos, los más recientes primero."""
+    return service.list_products()
+
 
 @router.get("/products/search", response_model=list[ProductOut])
 def search_products(
-    q: str,
-    db: Session = Depends(get_db),
-    limit: int = 50,
-    offset: int = 0
-):
-    """
-    Busca productos por nombre, barcode o SKU.
-    Soporta coincidencias parciales.
-    """
+    service: ProductServiceDep,
+    q: Annotated[str, Query(min_length=1, max_length=100)],
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> Sequence[Product]:
+    """Busca productos por nombre, código de barras o SKU (coincidencia parcial)."""
+    return service.search_products(q, limit, offset)
 
-    query = db.query(Product).filter(
-        or_(
-            Product.name.ilike(f"%{q}%"),
-            Product.barcode.ilike(f"%{q}%"),
-            Product.sku.ilike(f"%{q}%")
-        )
-    ).limit(limit).offset(offset)
-
-    return query.all()
 
 @router.get("/products/filter", response_model=list[ProductOut])
 def filter_products(
-    db: Session = Depends(get_db),
-    search: str | None = None,
-    category_id: int | None = None,
-    active: bool | None = None,
-    min_price: float | None = None,
-    max_price: float | None = None,
-    in_stock: bool | None = None,
-    limit: int = 50,
-    offset: int = 0
-):
-    query = db.query(Product)
+    service: ProductServiceDep, filters: Annotated[ProductFilters, Query()]
+) -> Sequence[Product]:
+    """Filtra por texto, categoría, estado, rango de precio y existencias."""
+    return service.filter_products(filters)
 
-    if search:
-        query = query.filter(
-            or_(
-                Product.name.ilike(f"%{search}%"),
-                Product.barcode.ilike(f"%{search}%"),
-                Product.sku.ilike(f"%{search}%")
-            )
-        )
-
-    if category_id:
-        query = query.filter(Product.category_id == category_id)
-
-    if active is not None:
-        query = query.filter(Product.is_active == active)
-
-    if min_price is not None:
-        query = query.filter(Product.price >= min_price)
-
-    if max_price is not None:
-        query = query.filter(Product.price <= max_price)
-
-    if in_stock is not None:
-        query = query.join(Inventory, Inventory.product_id == Product.id)
-        if in_stock:
-            query = query.filter(Inventory.quantity > 0)
-        else:
-            query = query.filter(Inventory.quantity <= 0)
-
-    return query.limit(limit).offset(offset).all()
-
-@router.put("/products/{product_id}", response_model=ProductOut)
-def update_product(product_id: int, data: ProductUpdate, db: Session = Depends(get_db)):
-
-    product = db.query(Product).filter(Product.id == product_id).first()
-
-    if not product:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-
-    # Actualizar solo los campos enviados
-    update_data = data.dict(exclude_unset=True)
-
-    for field, value in update_data.items():
-        setattr(product, field, value)
-
-    db.commit()
-    db.refresh(product)
-
-    return product
-
-@router.delete("/products/{product_id}")
-def deactivate_product(product_id: int, db: Session = Depends(get_db)):
-
-    product = db.query(Product).filter(Product.id == product_id).first()
-
-    if not product:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-
-    product.is_active = False
-
-    db.commit()
-
-    return {"status": "success", "message": "Producto desactivado"}
 
 @router.get("/products/{product_id}", response_model=ProductOut)
-def get_product_by_id(product_id: int, db: Session = Depends(get_db)):
-    product = db.query(Product).filter(Product.id == product_id).first()
+def get_product(product_id: int, service: ProductServiceDep) -> Product:
+    """Regresa un producto. Responde 404 si no existe."""
+    return service.get_product(product_id)
 
-    if not product:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-    return product
+@router.put("/products/{product_id}", response_model=ProductOut)
+def update_product(product_id: int, data: ProductUpdate, service: ProductServiceDep) -> Product:
+    """Actualiza solo los campos enviados.
+
+    Responde 404 si el producto no existe, 400 si la categoría no existe y
+    409 si el código de barras ya lo usa otro producto.
+    """
+    return service.update_product(product_id, data)
+
+
+@router.post("/products/{product_id}/deactivate", response_model=ProductOut)
+def deactivate_product(product_id: int, service: ProductServiceDep) -> Product:
+    """Desactiva el producto (deja de venderse pero conserva su historial)."""
+    return service.deactivate_product(product_id)
+
+
+@router.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_product(product_id: int, service: ProductServiceDep) -> None:
+    """Elimina un producto que nunca se ha usado.
+
+    Responde 404 si no existe y 409 si tiene ventas o movimientos de
+    inventario (en ese caso hay que desactivarlo).
+    """
+    service.delete_product(product_id)

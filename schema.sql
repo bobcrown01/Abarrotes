@@ -19,13 +19,16 @@ CREATE TABLE products (
     is_active   BOOLEAN DEFAULT TRUE
 );
 
+-- Un código de barras no se puede repetir (los productos sin código sí)
+CREATE UNIQUE INDEX products_barcode_key ON products (barcode) WHERE barcode IS NOT NULL;
+
 -- =========================
 -- INVENTARIO
 -- =========================
 
 CREATE TABLE inventory (
     id          SERIAL PRIMARY KEY,
-    product_id  INTEGER NOT NULL REFERENCES products(id),
+    product_id  INTEGER NOT NULL UNIQUE REFERENCES products(id),
     quantity    NUMERIC(14,3) DEFAULT 0,
     min_stock   NUMERIC(14,3) DEFAULT 0,
     max_stock   NUMERIC(14,3)

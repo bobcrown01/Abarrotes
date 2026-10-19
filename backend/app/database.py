@@ -1,15 +1,20 @@
-import os
+"""Motor de base de datos, sesiones y clase base de los modelos ORM."""
+
+from collections.abc import Iterator
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+from app.core.config import get_settings
 
+_settings = get_settings()
+
+# create_engine no abre conexiones hasta la primera consulta
 engine = create_engine(
-    DATABASE_URL,
+    _settings.database_url,
     pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=5,
+    pool_size=_settings.db_pool_size,
+    max_overflow=_settings.db_max_overflow,
 )
 
 SessionLocal = sessionmaker(
@@ -18,10 +23,17 @@ SessionLocal = sessionmaker(
     expire_on_commit=False,
 )
 
-class Base(DeclarativeBase):
-    pass
 
-def get_db():
+class Base(DeclarativeBase):
+    """Clase base de todos los modelos ORM."""
+
+
+def get_db() -> Iterator[Session]:
+    """Dependencia de FastAPI que entrega una sesión por petición.
+
+    Yields:
+        Sesión de SQLAlchemy que se cierra al terminar la petición.
+    """
     db = SessionLocal()
     try:
         yield db

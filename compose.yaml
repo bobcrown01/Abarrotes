@@ -10,6 +10,7 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    mem_limit: 32m
     networks:
       - frontend_net
 
@@ -37,19 +38,34 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    mem_limit: 160m
     networks:
       - frontend_net
       - db_net
       - egress_net
 
   db:
-    image: postgres:17
+    # Alpine pesa ~280 MB vs ~650 MB de la imagen Debian
+    image: postgres:17-alpine
+    # Ajustes para la RAM de la Raspberry Pi Zero 2 W (512 MB)
+    command:
+      - postgres
+      - -c
+      - shared_buffers=32MB
+      - -c
+      - max_connections=20
+      - -c
+      - work_mem=2MB
     environment:
       POSTGRES_DB: abarrotes
       POSTGRES_USER: app_user
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Solo se ejecutan cuando el volumen está vacío (primera instalación)
+      - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./categorias.sql:/docker-entrypoint-initdb.d/02_categorias.sql:ro
+      - ./insertar_roles.sql:/docker-entrypoint-initdb.d/03_roles.sql:ro
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -61,6 +77,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    mem_limit: 160m
     networks:
       - db_net
 

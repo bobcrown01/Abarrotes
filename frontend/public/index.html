@@ -3,62 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Dashboard Offline</title>
+    <title>Vender · Abarrotes POS</title>
 
-    <!-- Bootstrap local -->
-    <link rel="stylesheet" href="static/css/bootstrap.css">
-
+    <link rel="stylesheet" href="static/css/app.css">
     <link rel="stylesheet" href="static/css/pos.css">
-
-    <!-- FontAwesome local -->
     <link rel="stylesheet" href="static/fontawesome/css/all.min.css">
 
+    <script type="module" src="static/js/pos/pos-page.js"></script>
 </head>
 
 <body>
+    <a class="skip-link" href="#posSearch">Saltar al buscador</a>
 
-    <div id="sidebar">
-        <div class="menu-item" onclick="toggleSidebar()">
-            <i class="fa-solid fa-bars"></i>
-            <span class="menu-text">Menú</span>
-        </div>
+    <aside class="app-sidebar" id="appSidebar"></aside>
 
-        <div class="menu-item"><i class="fa-solid fa-cash-register"></i><span class="menu-text">Vender</span></div>
-        <div class="menu-item"><i class="fa-solid fa-house"></i><span class="menu-text">Inicio</span></div>
-        <div class="menu-item"><i class="fa-solid fa-box"></i><span class="menu-text">Productos</span></div>
-        <div class="menu-item"><i class="fa-solid fa-users"></i><span class="menu-text">Clientes</span></div>
-        <div class="menu-item"><i class="fa-solid fa-gear"></i><span class="menu-text">Configuración</span></div>
-    </div>
+    <main class="app-main pos-layout">
 
-    <div id="main" class="container-fluid">
+        <!-- Catálogo -->
+        <section class="pos-catalog" aria-labelledby="catalogHeading">
+            <h1 class="visually-hidden" id="catalogHeading">Vender</h1>
 
-        <div class="row mt-4">
+            <div class="pos-search" role="search">
+                <i class="fa-solid fa-barcode" aria-hidden="true"></i>
+                <label class="visually-hidden" for="posSearch">Buscar o escanear producto</label>
+                <input type="search" id="posSearch" placeholder="Escanea o busca un producto" autocomplete="off" aria-describedby="searchHint">
+                <kbd class="search-kbd" id="searchHint" title="Pulsa / para buscar">/</kbd>
+            </div>
 
-            <div class="col-md-3">
-                <div id="cart-area">
-                    <h4 class="mb-3"><i class="fa-solid fa-cart-shopping"></i> Venta</h4>
-                    <p class="text-secondary">Carrito vacío</p>
+            <div class="chip-row" id="categoryChips" role="group" aria-label="Filtrar por categoría"></div>
+
+            <ul class="product-grid" id="productGrid" aria-label="Productos" aria-busy="true"></ul>
+            <p class="empty-state" id="gridEmpty" hidden></p>
+        </section>
+
+        <!-- Ticket -->
+        <aside class="pos-ticket card" aria-labelledby="ticketHeading">
+            <header class="ticket-header">
+                <h2 id="ticketHeading"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Venta actual</h2>
+                <button type="button" class="btn-link" id="btnClearCart" disabled>Vaciar</button>
+            </header>
+
+            <div class="ticket-cashier">
+                <label for="cashierSelect"><i class="fa-solid fa-user" aria-hidden="true"></i> Cajero</label>
+                <select class="input" id="cashierSelect">
+                    <option value="">Cargando…</option>
+                </select>
+            </div>
+
+            <ul class="cart-lines" id="cartLines" aria-label="Productos en la venta" aria-live="polite"></ul>
+            <div class="cart-empty" id="cartEmpty">
+                <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+                <p>Escanea un producto o tócalo en el catálogo para agregarlo.</p>
+            </div>
+
+            <footer class="ticket-footer">
+                <div class="ticket-total">
+                    <span id="cartCount">0 artículos</span>
+                    <strong id="cartTotal">$0.00</strong>
                 </div>
+                <button type="button" class="btn btn-primary btn-charge" id="btnCharge" aria-keyshortcuts="F12" disabled>Cobrar</button>
+            </footer>
+        </aside>
+
+    </main>
+
+    <!-- Cobro -->
+    <dialog class="app-dialog pay-dialog" id="paymentDialog" aria-labelledby="payHeading">
+        <form id="paymentForm" novalidate>
+            <header class="dialog-header">
+                <h2 id="payHeading">Cobrar</h2>
+                <button type="button" class="icon-btn" id="btnCancelPay" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </header>
+
+            <div class="dialog-body">
+                <div class="pay-total">
+                    <span>Total a pagar</span>
+                    <strong id="payTotal">$0.00</strong>
+                </div>
+
+                <fieldset class="pay-methods">
+                    <legend class="section-title">Método de pago</legend>
+                    <label class="method-option"><input type="radio" name="method" value="efectivo" checked><i class="fa-solid fa-money-bill" aria-hidden="true"></i><span>Efectivo</span></label>
+                    <label class="method-option"><input type="radio" name="method" value="debito"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><span>Débito</span></label>
+                    <label class="method-option"><input type="radio" name="method" value="credito"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><span>Crédito</span></label>
+                    <label class="method-option"><input type="radio" name="method" value="transferencia"><i class="fa-solid fa-building-columns" aria-hidden="true"></i><span>Transferencia</span></label>
+                </fieldset>
+
+                <div id="cashSection">
+                    <div class="field">
+                        <label for="cashReceived">Efectivo recibido</label>
+                        <div class="input-prefix">
+                            <span aria-hidden="true">$</span>
+                            <input class="input input-lg" id="cashReceived" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="chip-row" id="quickCash" role="group" aria-label="Montos rápidos"></div>
+                    <div class="pay-change">
+                        <span>Cambio</span>
+                        <strong id="cashChange" aria-live="polite">—</strong>
+                    </div>
+                </div>
+
+                <div class="alert alert-error" id="payError" role="alert" hidden></div>
             </div>
-        
 
-            <div class="col-md-8">
-                <table class="product-table" id="productTable">
-                    <tbody></tbody>
-                </table>
-            </div>
-            <script src="static/js/products.js"></script>
-        </div>
+            <footer class="dialog-footer">
+                <button type="submit" class="btn btn-primary btn-charge" id="btnConfirmPay">Cobrar</button>
+            </footer>
+        </form>
+    </dialog>
 
-    </div>
-
-    <script src="static/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        function toggleSidebar() {
-            document.getElementById("sidebar").classList.toggle("collapsed");
-        }
-    </script>
-
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>

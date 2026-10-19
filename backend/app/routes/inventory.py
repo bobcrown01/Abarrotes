@@ -1,178 +1,72 @@
-from fastapi import APIRouter, Depends, HTTPException
-from decimal import Decimal
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models.inventory import Inventory
-from app.models.inventory_movement import InventoryMovement
-from app.models.products import Product
-from app.schemas.inventory import InventoryMovementCreate
+"""Endpoints HTTP de inventario.
 
-router = APIRouter()
+Importante: ``/inventory/movements`` va antes que ``/inventory/{product_id}``;
+si no, FastAPI intenta leer "movements" como id y responde 422.
+"""
 
-@router.post("/inventory/movements")
-def create_inventory_movement(data: InventoryMovementCreate, db: Session = Depends(get_db)):
+from typing import Annotated
 
-    # Validar producto
-    product = db.query(Product).filter(Product.id == data.product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
+from fastapi import APIRouter, Query, status
 
-    # Obtener inventario actual
-    inventory = db.query(Inventory).filter(Inventory.product_id == data.product_id).first()
+from app.routes.dependencies import InventoryServiceDep
+from app.schemas.inventory import (
+    InventoryMovementCreate,
+    InventoryMovementOut,
+    MovementFilters,
+    MovementListOut,
+    ProductMovementOut,
+    StockFilters,
+    StockOut,
+)
+from app.services.inventory_service import MovementView, RecordedMovement, StockView
 
-    if not inventory:
-        inventory = Inventory(product_id=data.product_id, quantity=Decimal("0"))
-        db.add(inventory)
+router = APIRouter(tags=["inventario"])
 
-    # Calcular nuevo inventario
-    if data.type == "entrada":
-        inventory.quantity += data.quantity
 
-    elif data.type == "salida":
-        if inventory.quantity < data.quantity:
-            raise HTTPException(status_code=400, detail="Inventario insuficiente")
-        inventory.quantity -= data.quantity
+@router.post(
+    "/inventory/movements",
+    response_model=InventoryMovementOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_inventory_movement(
+    data: InventoryMovementCreate, service: InventoryServiceDep
+) -> RecordedMovement:
+    """Registra una entrada, salida o ajuste de inventario.
 
-    elif data.type == "ajuste":
-        inventory.quantity = data.quantity
+    Responde 404 si el producto no existe y 409 si una salida deja
+    existencias negativas.
+    """
+    return service.record_movement(data)
 
-    else:
-        raise HTTPException(status_code=400, detail="Tipo de movimiento inválido")
 
-    # Registrar movimiento
-    movement = InventoryMovement(
-        product_id=data.product_id,
-        type=data.type,
-        quantity=data.quantity,
-        reason=data.reason,
-        user_id=data.user_id
-    )
+@router.get("/inventory", response_model=list[StockOut])
+def list_stock(
+    service: InventoryServiceDep, filters: Annotated[StockFilters, Query()]
+) -> list[StockView]:
+    """Lista existencias por categoría y con/sin stock, ordenadas por producto."""
+    return service.list_stock(filters)
 
-    db.add(movement)
-    db.commit()
-    db.refresh(movement)
 
-    return {
-        "status": "success",
-        "message": "Movimiento registrado",
-        "movement_id": movement.id,
-        "new_quantity": float(inventory.quantity)
-    }
+@router.get("/inventory/movements", response_model=list[MovementListOut])
+def list_movements(
+    service: InventoryServiceDep, filters: Annotated[MovementFilters, Query()]
+) -> list[MovementView]:
+    """Historial de movimientos por producto, tipo, usuario y rango de fechas."""
+    return service.list_movements(filters)
 
-@router.get("/inventory")
-def get_inventory(
-    db: Session = Depends(get_db),
-    limit: int = 50,
-    offset: int = 0,
-    category_id: int | None = None,
-    in_stock: bool | None = None
-):
-    query = db.query(Inventory).join(Product)
 
-    # Filtro por categoría
-    if category_id:
-        query = query.filter(Product.category_id == category_id)
+@router.get("/inventory/{product_id}", response_model=StockOut)
+def get_stock(product_id: int, service: InventoryServiceDep) -> StockView:
+    """Existencias de un producto. Responde 404 si no lleva inventario."""
+    return service.get_stock(product_id)
 
-    # Filtro por productos con stock > 0
-    if in_stock is True:
-        query = query.filter(Inventory.quantity > 0)
 
-    # Filtro por productos sin stock
-    if in_stock is False:
-        query = query.filter(Inventory.quantity <= 0)
-
-    results = query.limit(limit).offset(offset).all()
-
-    return [
-        {
-            "product_id": inv.product_id,
-            "product_name": inv.product.name,
-            "quantity": float(inv.quantity),
-            "min_stock": float(inv.min_stock),
-            "max_stock": float(inv.max_stock) if inv.max_stock else None,
-            "unit": inv.product.unit,
-            "is_active": inv.product.is_active
-        }
-        for inv in results
-    ]
-
-@router.get("/inventory/{product_id}")
-def get_inventory_by_product(product_id: int, db: Session = Depends(get_db)):
-
-    inv = db.query(Inventory).filter(Inventory.product_id == product_id).first()
-
-    if not inv:
-        raise HTTPException(404, "Inventario no encontrado para este producto")
-
-    return {
-        "product_id": inv.product_id,
-        "product_name": inv.product.name,
-        "quantity": float(inv.quantity),
-        "min_stock": float(inv.min_stock),
-        "max_stock": float(inv.max_stock) if inv.max_stock else None,
-        "unit": inv.product.unit,
-        "is_active": inv.product.is_active
-    }
-
-@router.get("/inventory/movements")
-def get_inventory_movements(
-    db: Session = Depends(get_db),
-    product_id: int | None = None,
-    type: str | None = None,  # entrada / salida / ajuste
-    user_id: int | None = None,
-    start_date: str | None = None,
-    end_date: str | None = None,
-    limit: int = 100,
-    offset: int = 0
-):
-    query = db.query(InventoryMovement).join(Product)
-
-    if product_id:
-        query = query.filter(InventoryMovement.product_id == product_id)
-
-    if type:
-        query = query.filter(InventoryMovement.type == type)
-
-    if user_id:
-        query = query.filter(InventoryMovement.user_id == user_id)
-
-    if start_date:
-        query = query.filter(InventoryMovement.created_at >= start_date)
-
-    if end_date:
-        query = query.filter(InventoryMovement.created_at <= end_date)
-
-    movements = query.order_by(InventoryMovement.id.desc()).limit(limit).offset(offset).all()
-
-    return [
-        {
-            "movement_id": m.id,
-            "product_id": m.product_id,
-            "product_name": m.product.name,
-            "type": m.type,
-            "quantity": float(m.quantity),
-            "reason": m.reason,
-            "created_at": m.created_at,
-            "user_id": m.user_id
-        }
-        for m in movements
-    ]
-
-@router.get("/inventory/{product_id}/movements")
-def get_movements_by_product(product_id: int, db: Session = Depends(get_db)):
-
-    movements = db.query(InventoryMovement).filter(
-        InventoryMovement.product_id == product_id
-    ).order_by(InventoryMovement.id.desc()).all()
-
-    return [
-        {
-            "movement_id": m.id,
-            "type": m.type,
-            "quantity": float(m.quantity),
-            "reason": m.reason,
-            "created_at": m.created_at,
-            "user_id": m.user_id
-        }
-        for m in movements
-    ]
+@router.get("/inventory/{product_id}/movements", response_model=list[ProductMovementOut])
+def list_product_movements(
+    product_id: int,
+    service: InventoryServiceDep,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> list[MovementView]:
+    """Historial de un producto, lo más reciente primero. 404 si no existe."""
+    return service.list_product_movements(product_id, limit, offset)

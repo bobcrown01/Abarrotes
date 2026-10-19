@@ -1,149 +1,58 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import or_, text
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models.products import Product
-from app.models.payment import Payment
+"""Endpoints HTTP de ventas."""
+
+from collections.abc import Sequence
+from typing import Annotated
+
+from fastapi import APIRouter, Query, status
+
 from app.models.sale import Sale
-from app.models.sale_item import SaleItem
-from app.schemas.sale import SaleCreate, SaleItemCreate, PaymentCreate
-from app.models.inventory import Inventory
-from datetime import datetime
+from app.routes.dependencies import SaleServiceDep
+from app.schemas.sale import PaymentCreate, SaleCreate, SaleItemCreate, SaleOut, SaleSummaryOut
 
-router = APIRouter()
+router = APIRouter(tags=["ventas"])
 
-@router.post("/sales")
-def create_sale(data: SaleCreate, db: Session = Depends(get_db)):
 
-    new_sale = Sale(
-        folio=f"V-{int(datetime.utcnow().timestamp())}",
-        customer_id=data.customer_id,
-        user_id=data.user_id,
-        status="pendiente"
-    )
+@router.post("/sales", response_model=SaleOut, status_code=status.HTTP_201_CREATED)
+def create_sale(data: SaleCreate, service: SaleServiceDep) -> Sale:
+    """Abre una venta en estado ``pendiente``."""
+    return service.create_sale(data)
 
-    db.add(new_sale)
-    db.commit()
-    db.refresh(new_sale)
 
-    return {
-        "status": "success",
-        "sale_id": new_sale.id,
-        "folio": new_sale.folio
-    }
+@router.post("/sales/items", response_model=SaleOut, status_code=status.HTTP_201_CREATED)
+def add_sale_item(data: SaleItemCreate, service: SaleServiceDep) -> Sale:
+    """Agrega un producto a la venta con el precio del catálogo."""
+    return service.add_item(data)
 
-@router.post("/sales/items")
-def add_sale_item(data: SaleItemCreate, db: Session = Depends(get_db)):
 
-    sale = db.query(Sale).filter(Sale.id == data.sale_id).first()
-    if not sale:
-        raise HTTPException(404, "Venta no encontrada")
+@router.post("/sales/payments", response_model=SaleOut, status_code=status.HTTP_201_CREATED)
+def add_payment(data: PaymentCreate, service: SaleServiceDep) -> Sale:
+    """Registra un pago; el cambio se calcula en el servidor."""
+    return service.add_payment(data)
 
-    product = db.query(Product).filter(Product.id == data.product_id).first()
-    if not product:
-        raise HTTPException(404, "Producto no encontrado")
 
-    subtotal = (data.qty * data.price) - data.discount
+@router.post("/sales/{sale_id}/close", response_model=SaleOut)
+def close_sale(sale_id: int, service: SaleServiceDep) -> Sale:
+    """Cierra la venta pagada y descuenta el inventario."""
+    return service.close_sale(sale_id)
 
-    item = SaleItem(
-        sale_id=data.sale_id,
-        product_id=data.product_id,
-        qty=data.qty,
-        price=data.price,
-        discount=data.discount,
-        subtotal=subtotal
-    )
 
-    db.add(item)
+@router.post("/sales/{sale_id}/cancel", response_model=SaleOut)
+def cancel_sale(sale_id: int, service: SaleServiceDep) -> Sale:
+    """Cancela la venta; si ya estaba pagada regresa el inventario."""
+    return service.cancel_sale(sale_id)
 
-    # Actualizar totales de la venta
-    sale.subtotal += subtotal
-    sale.total = sale.subtotal - sale.discount
 
-    db.commit()
-    db.refresh(item)
+@router.get("/sales/{sale_id}", response_model=SaleOut)
+def get_sale(sale_id: int, service: SaleServiceDep) -> Sale:
+    """Regresa una venta con partidas y pagos."""
+    return service.get_sale(sale_id)
 
-    return {
-        "status": "success",
-        "item_id": item.id,
-        "sale_total": float(sale.total)
-    }
 
-@router.post("/sales/payments")
-def add_payment(data: PaymentCreate, db: Session = Depends(get_db)):
-
-    sale = db.query(Sale).filter(Sale.id == data.sale_id).first()
-    if not sale:
-        raise HTTPException(404, "Venta no encontrada")
-
-    payment = Payment(
-        sale_id=data.sale_id,
-        method=data.method,
-        amount=data.amount,
-        received=data.received,
-        change=data.change,
-        reference=data.reference
-    )
-
-    db.add(payment)
-    db.commit()
-    db.refresh(payment)
-
-    return {
-        "status": "success",
-        "payment_id": payment.id
-    }
-
-@router.post("/sales/{sale_id}/close")
-def close_sale(sale_id: int, db: Session = Depends(get_db)):
-
-    sale = db.query(Sale).filter(Sale.id == sale_id).first()
-    if not sale:
-        raise HTTPException(404, "Venta no encontrada")
-
-    total_pagado = sum([float(p.amount) for p in sale.payments])
-
-    if total_pagado < sale.total:
-        raise HTTPException(400, "La venta no está completamente pagada")
-
-    sale.status = "pagada"
-
-    # Restar inventario por cada item
-    for item in sale.items:
-        inv = db.query(Inventory).filter(Inventory.product_id == item.product_id).first()
-        if inv:
-            inv.quantity -= item.qty
-
-    db.commit()
-
-    return {"status": "success", "message": "Venta cerrada"}
-
-@router.get("/sales/{sale_id}")
-def get_sale(sale_id: int, db: Session = Depends(get_db)):
-    sale = db.query(Sale).filter(Sale.id == sale_id).first()
-    if not sale:
-        raise HTTPException(404, "Venta no encontrada")
-    return sale
-
-@router.get("/sales")
-def list_sales(db: Session = Depends(get_db), limit: int = 50, offset: int = 0):
-    return db.query(Sale).order_by(Sale.id.desc()).limit(limit).offset(offset).all()
-
-@router.post("/sales/{sale_id}/cancel")
-def cancel_sale(sale_id: int, db: Session = Depends(get_db)):
-
-    sale = db.query(Sale).filter(Sale.id == sale_id).first()
-    if not sale:
-        raise HTTPException(404, "Venta no encontrada")
-
-    sale.status = "cancelada"
-
-    # Revertir inventario
-    for item in sale.items:
-        inv = db.query(Inventory).filter(Inventory.product_id == item.product_id).first()
-        if inv:
-            inv.quantity += item.qty
-
-    db.commit()
-
-    return {"status": "success", "message": "Venta cancelada"}
+@router.get("/sales", response_model=list[SaleSummaryOut])
+def list_sales(
+    service: SaleServiceDep,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> Sequence[Sale]:
+    """Lista las ventas más recientes (paginado)."""
+    return service.list_sales(limit, offset)
