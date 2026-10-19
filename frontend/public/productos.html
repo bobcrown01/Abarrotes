@@ -14,20 +14,7 @@
 <body>
     <a class="skip-link" href="#main">Saltar al contenido</a>
 
-    <aside class="app-sidebar">
-        <div class="brand">
-            <span class="brand-logo" aria-hidden="true"><i class="fa-solid fa-store"></i></span>
-            <span class="brand-name">Abarrotes</span>
-        </div>
-
-        <nav aria-label="Menú principal">
-            <a class="nav-item" href="index.html" aria-label="Vender"><i class="fa-solid fa-cash-register" aria-hidden="true"></i><span>Vender</span></a>
-            <a class="nav-item" href="#" aria-label="Inicio"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Inicio</span></a>
-            <a class="nav-item" href="productos.html" aria-label="Productos" aria-current="page"><i class="fa-solid fa-box" aria-hidden="true"></i><span>Productos</span></a>
-            <a class="nav-item" href="#" aria-label="Clientes"><i class="fa-solid fa-users" aria-hidden="true"></i><span>Clientes</span></a>
-            <a class="nav-item" href="#" aria-label="Configuración"><i class="fa-solid fa-gear" aria-hidden="true"></i><span>Configuración</span></a>
-        </nav>
-    </aside>
+    <aside class="app-sidebar" id="appSidebar"></aside>
 
     <main class="app-main" id="main">
 
@@ -68,6 +55,7 @@
                             <th scope="col" class="num">Costo</th>
                             <th scope="col" class="num">Precio</th>
                             <th scope="col">Estado</th>
+                            <th scope="col"><span class="visually-hidden">Acciones</span></th>
                         </tr>
                     </thead>
                     <tbody id="productRows"></tbody>
@@ -80,6 +68,21 @@
         </section>
 
     </main>
+
+    <!-- Confirmación de borrado -->
+    <dialog class="app-dialog" id="deleteDialog" aria-labelledby="deleteTitle" aria-describedby="deleteMessage">
+        <header class="dialog-header">
+            <h2 id="deleteTitle">Eliminar producto</h2>
+        </header>
+        <div class="dialog-body">
+            <p class="dialog-message" id="deleteMessage"></p>
+            <div class="alert alert-error" id="deleteError" role="alert" hidden></div>
+        </div>
+        <footer class="dialog-footer dialog-actions">
+            <button type="button" class="btn btn-ghost" id="btnCancelDelete">Cancelar</button>
+            <button type="button" class="btn btn-danger" id="btnConfirmDelete">Eliminar</button>
+        </footer>
+    </dialog>
 
     <!-- Panel lateral: nuevo producto -->
     <div class="drawer-overlay" id="drawerOverlay" hidden></div>

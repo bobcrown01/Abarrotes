@@ -1,9 +1,14 @@
-/** Página de Productos: listado, filtros y alta. */
+/** Página de Productos: listado, filtros, alta y eliminación. */
 
 import { ApiError, getCategories, getProducts } from "../lib/api.js";
 import { escapeHtml, formatMoney } from "../lib/format.js";
+import { enableImageFallback, productAvatar } from "../lib/product-image.js";
+import { renderSidebar } from "../lib/sidebar.js";
 import { showToast } from "../lib/toast.js";
+import { setupDeleteDialog } from "./delete-dialog.js";
 import { setupProductForm } from "./product-form.js";
+
+renderSidebar("productos.html");
 
 /** @typedef {import("../lib/api.js").Product} Product */
 /** @typedef {import("../lib/api.js").Category} Category */
@@ -44,8 +49,13 @@ function productRow(p) {
     return `
         <tr>
             <td>
-                <div class="product-title">${escapeHtml(p.name)}</div>
-                <div class="product-unit">${escapeHtml(p.unit ?? "pieza")}</div>
+                <div class="product-cell">
+                    ${productAvatar(p, "avatar-sm")}
+                    <div>
+                        <div class="product-title">${escapeHtml(p.name)}</div>
+                        <div class="product-unit">${escapeHtml(p.unit ?? "pieza")}</div>
+                    </div>
+                </div>
             </td>
             <td>${escapeHtml(state.categoryNames.get(p.category_id) ?? "—")}</td>
             <td class="muted">${escapeHtml(p.barcode ?? "—")}</td>
@@ -53,6 +63,11 @@ function productRow(p) {
             <td class="num muted">${formatMoney(p.cost)}</td>
             <td class="num"><strong>${formatMoney(p.price)}</strong></td>
             <td>${status}</td>
+            <td class="actions">
+                <button type="button" class="icon-btn icon-btn-danger" data-delete="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                </button>
+            </td>
         </tr>`;
 }
 
@@ -114,9 +129,26 @@ const form = setupProductForm({
     },
 });
 
+const deleteDialog = setupDeleteDialog({
+    onDone: message => {
+        showToast(message);
+        loadProducts();
+    },
+});
+
 document.getElementById("btnNewProduct")?.addEventListener("click", form.open);
 searchInput.addEventListener("input", render);
 categoryFilter.addEventListener("change", render);
+
+rows.addEventListener("click", event => {
+    const button = /** @type {HTMLElement} */ (event.target).closest("[data-delete]");
+    if (!button) return;
+    const product = state.products.find(
+        p => p.id === Number(/** @type {HTMLElement} */ (button).dataset.delete),
+    );
+    if (product) deleteDialog.open(product);
+});
+enableImageFallback(rows);
 
 // Primero categorías para poder mostrar su nombre en la tabla
 loadCategories().then(categories => {
