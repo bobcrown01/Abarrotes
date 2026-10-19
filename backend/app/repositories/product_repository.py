@@ -6,12 +6,14 @@ repositorios y así se pueden probar con implementaciones falsas.
 
 from collections.abc import Sequence
 
-from sqlalchemy import ColumnElement, or_, select
+from sqlalchemy import ColumnElement, exists, or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models.inventory import Inventory
+from app.models.inventory_movement import InventoryMovement
 from app.models.products import Category, Product
+from app.models.sale_item import SaleItem
 from app.schemas.product import ProductFilters
 
 
@@ -180,3 +182,36 @@ class ProductRepository:
             raise
         self._db.refresh(product)
         return product
+
+    def has_history(self, product_id: int) -> bool:
+        """Indica si el producto aparece en ventas o en el inventario.
+
+        Un producto con historial no se puede borrar sin perder los registros
+        de ventas y movimientos que lo referencian.
+
+        Args:
+            product_id: Id del producto.
+        """
+        references = (
+            exists().where(SaleItem.product_id == product_id),
+            exists().where(InventoryMovement.product_id == product_id),
+            exists().where(Inventory.product_id == product_id),
+        )
+        return any(self._db.scalar(select(ref)) for ref in references)
+
+    def delete(self, product: Product) -> None:
+        """Borra el producto definitivamente y confirma la transacción.
+
+        Args:
+            product: Producto sin historial.
+
+        Raises:
+            sqlalchemy.exc.IntegrityError: Si otra tabla todavía lo referencia
+                (p. ej. una compra a proveedor).
+        """
+        self._db.delete(product)
+        try:
+            self._db.commit()
+        except SQLAlchemyError:
+            self._db.rollback()
+            raise

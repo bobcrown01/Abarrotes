@@ -30,6 +30,16 @@ class DuplicateBarcodeError(ConflictError):
         super().__init__("Ya existe un producto con ese código de barras")
 
 
+class ProductInUseError(ConflictError):
+    """El producto tiene ventas o movimientos y no se puede borrar."""
+
+    def __init__(self) -> None:
+        """Crea el error con su mensaje para el usuario."""
+        super().__init__(
+            "El producto tiene ventas o movimientos de inventario; desactívalo en su lugar"
+        )
+
+
 class CategoryStore(Protocol):
     """Lo que el servicio necesita del repositorio de categorías."""
 
@@ -71,6 +81,14 @@ class ProductStore(Protocol):
 
     def save(self, product: Product) -> Product:
         """Confirma los cambios de un producto existente."""
+        ...
+
+    def has_history(self, product_id: int) -> bool:
+        """Indica si el producto aparece en ventas o en el inventario."""
+        ...
+
+    def delete(self, product: Product) -> None:
+        """Borra el producto definitivamente."""
         ...
 
 
@@ -192,6 +210,30 @@ class ProductService:
         saved = self._products.save(product)
         logger.info("Producto desactivado id=%s", product_id)
         return saved
+
+    def delete_product(self, product_id: int) -> None:
+        """Borra un producto que nunca se ha usado.
+
+        Args:
+            product_id: Id del producto.
+
+        Raises:
+            ProductNotFoundError: Si el producto no existe.
+            ProductInUseError: Si tiene ventas, inventario u otras referencias;
+                en ese caso hay que desactivarlo.
+        """
+        product = self.get_product(product_id)
+        if self._products.has_history(product_id):
+            raise ProductInUseError()
+
+        try:
+            self._products.delete(product)
+        except IntegrityError as exc:
+            # Referencias que no revisa has_history (p. ej. compras a proveedor)
+            logger.warning("Borrado de producto %s rechazado por la base: %s", product_id, exc.orig)
+            raise ProductInUseError() from exc
+
+        logger.info("Producto eliminado id=%s nombre=%s", product_id, product.name)
 
     # ---------- Apoyo ----------
 

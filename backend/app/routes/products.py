@@ -82,7 +82,17 @@ def update_product(product_id: int, data: ProductUpdate, service: ProductService
     return service.update_product(product_id, data)
 
 
-@router.delete("/products/{product_id}", response_model=ProductOut)
+@router.post("/products/{product_id}/deactivate", response_model=ProductOut)
 def deactivate_product(product_id: int, service: ProductServiceDep) -> Product:
-    """Desactiva el producto (no lo borra) y lo regresa actualizado."""
+    """Desactiva el producto (deja de venderse pero conserva su historial)."""
     return service.deactivate_product(product_id)
+
+
+@router.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_product(product_id: int, service: ProductServiceDep) -> None:
+    """Elimina un producto que nunca se ha usado.
+
+    Responde 404 si no existe y 409 si tiene ventas o movimientos de
+    inventario (en ese caso hay que desactivarlo).
+    """
+    service.delete_product(product_id)

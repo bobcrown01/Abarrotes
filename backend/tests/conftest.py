@@ -69,6 +69,12 @@ class FakeProductRepository:
     def save(self, product: Product) -> Product:
         return product
 
+    def has_history(self, product_id: int) -> bool:
+        return False
+
+    def delete(self, product: Product) -> None:
+        self.products.remove(product)
+
     def filter(self, filters):  # Los filtros se prueban contra SQLite
         raise NotImplementedError
 

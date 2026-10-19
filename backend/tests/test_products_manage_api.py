@@ -118,13 +118,39 @@ def test_update_unknown_product_returns_404(db_client):
     assert db_client.put("/api/products/999", json={"price": 1}).status_code == 404
 
 
-# ---------- DELETE /products/{id} ----------
+# ---------- Desactivar y eliminar ----------
 
 
-def test_delete_deactivates_instead_of_removing(db_client):
-    response = db_client.delete("/api/products/1")
+def test_deactivate_keeps_product(db_client):
+    response = db_client.post("/api/products/1/deactivate")
 
     assert response.status_code == 200
     assert response.json()["is_active"] is False
     assert db_client.get("/api/products/1").json()["is_active"] is False
-    assert db_client.delete("/api/products/999").status_code == 404
+    assert db_client.post("/api/products/999/deactivate").status_code == 404
+
+
+def test_delete_unused_product_removes_it(db_client):
+    response = db_client.delete("/api/products/2")
+
+    assert response.status_code == 204
+    assert response.content == b""
+    assert db_client.get("/api/products/2").status_code == 404
+    assert db_client.delete("/api/products/2").status_code == 404
+
+
+def test_delete_product_with_inventory_returns_409(db_client):
+    stock_in(db_client, 1, 5)
+
+    response = db_client.delete("/api/products/1")
+
+    assert response.status_code == 409
+    assert "desactívalo" in response.json()["detail"]
+    assert db_client.get("/api/products/1").status_code == 200
+
+
+def test_delete_product_with_sales_returns_409(db_client):
+    sale = db_client.post("/api/sales", json={"user_id": 1}).json()
+    db_client.post("/api/sales/items", json={"sale_id": sale["id"], "product_id": 2, "qty": 1})
+
+    assert db_client.delete("/api/products/2").status_code == 409
