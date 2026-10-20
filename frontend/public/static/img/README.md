@@ -13,3 +13,10 @@ static/img/7501234567890.png   →  producto con barcode "7501234567890"
 - Las imágenes van dentro de la imagen de Docker del frontend: después de
   agregar o cambiar una, hay que reconstruir con
   `docker compose up -d --build frontend`.
+
+## Créditos
+
+Las fotos de los productos del catálogo inicial (`productos_tiendita.json`)
+provienen de [Open Food Facts](https://world.openfoodfacts.org) y se usan bajo
+licencia [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.es).
+Fueron reducidas a 300×300 px con fondo blanco.

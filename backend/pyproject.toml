@@ -18,6 +18,7 @@ convention = "google"
 # En pruebas se permite assert y contraseñas fijas, sin docstrings ni anotaciones;
 # conftest define variables de entorno antes de importar la app (E402)
 "tests/**" = ["S101", "S105", "S106", "D", "ANN", "E402"]
+"e2e/**" = ["S101", "D", "ANN"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

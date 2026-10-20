@@ -1,0 +1,1372 @@
+[
+    {
+        "name": "Coca-Cola 600 ml",
+        "barcode": "75007614",
+        "sku": null,
+        "category_id": 2,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Coca-Cola 355 ml",
+        "barcode": "7501055341344",
+        "sku": null,
+        "category_id": 2,
+        "price": 17,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Coca-Cola 2 L",
+        "barcode": "7501055302925",
+        "sku": null,
+        "category_id": 2,
+        "price": 38,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Coca-Cola 3 L",
+        "barcode": "7501055304745",
+        "sku": null,
+        "category_id": 2,
+        "price": 52,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Coca-Cola Sin Azúcar 600 ml",
+        "barcode": "7501055361557",
+        "sku": null,
+        "category_id": 2,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Pepsi 600 ml",
+        "barcode": "7501031310012",
+        "sku": null,
+        "category_id": 2,
+        "price": 18,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Pepsi 2 L",
+        "barcode": "7501031312405",
+        "sku": null,
+        "category_id": 2,
+        "price": 33,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Sprite 600 ml",
+        "barcode": "7501055305629",
+        "sku": null,
+        "category_id": 2,
+        "price": 19,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Fanta Naranja 600 ml",
+        "barcode": "7501055317462",
+        "sku": null,
+        "category_id": 2,
+        "price": 19,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Manzanita Sol 600 ml",
+        "barcode": "7501031360024",
+        "sku": null,
+        "category_id": 2,
+        "price": 17,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Sidral Mundet 600 ml",
+        "barcode": "7501055339983",
+        "sku": null,
+        "category_id": 2,
+        "price": 18,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Squirt 600 ml",
+        "barcode": "7501071120183",
+        "sku": null,
+        "category_id": 2,
+        "price": 18,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Jarritos Piña 2 L",
+        "barcode": "7501441604121",
+        "sku": null,
+        "category_id": 2,
+        "price": 30,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Peñafiel Agua Mineral 600 ml",
+        "barcode": "7501073839854",
+        "sku": null,
+        "category_id": 2,
+        "price": 17,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Topo Chico 600 ml",
+        "barcode": "0021136010541",
+        "sku": null,
+        "category_id": 2,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Agua Ciel 1 L",
+        "barcode": "7501055310883",
+        "sku": null,
+        "category_id": 2,
+        "price": 13,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Agua Ciel 600 ml",
+        "barcode": "7501055307906",
+        "sku": null,
+        "category_id": 2,
+        "price": 10,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Agua Bonafont 1 L",
+        "barcode": "0758104100422",
+        "sku": null,
+        "category_id": 2,
+        "price": 14,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Boing Guanábana 500 ml",
+        "barcode": "75003111",
+        "sku": null,
+        "category_id": 2,
+        "price": 16,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Jumex Durazno 335 ml",
+        "barcode": "7501013103175",
+        "sku": null,
+        "category_id": 2,
+        "price": 18,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Del Valle Néctar de Durazno 413 ml",
+        "barcode": "0003223905201",
+        "sku": null,
+        "category_id": 2,
+        "price": 18,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Gatorade Fresa-Sandía 600 ml",
+        "barcode": "0036731106186",
+        "sku": null,
+        "category_id": 2,
+        "price": 24,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Powerade Ion4 Naranja 600 ml",
+        "barcode": "7501055310807",
+        "sku": null,
+        "category_id": 2,
+        "price": 22,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Electrolit Coco 625 ml",
+        "barcode": "7501125104411",
+        "sku": null,
+        "category_id": 2,
+        "price": 29,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Red Bull Sugarfree 250 ml",
+        "barcode": "9002490200220",
+        "sku": null,
+        "category_id": 2,
+        "price": 42,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Monster Energy 473 ml",
+        "barcode": "0070847035916",
+        "sku": null,
+        "category_id": 2,
+        "price": 42,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Vive 100 500 ml",
+        "barcode": "7506192286978",
+        "sku": null,
+        "category_id": 2,
+        "price": 19,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Arizona Té Verde 680 ml",
+        "barcode": "0613008738884",
+        "sku": null,
+        "category_id": 2,
+        "price": 21,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Leche Lala Entera 1 L",
+        "barcode": "7501020515343",
+        "sku": null,
+        "category_id": 3,
+        "price": 30,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Leche Lala Deslactosada 1 L",
+        "barcode": "7501020515398",
+        "sku": null,
+        "category_id": 3,
+        "price": 32,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Leche Alpura Selecta Entera 1 L",
+        "barcode": "7501055905034",
+        "sku": null,
+        "category_id": 3,
+        "price": 30,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Leche Alpura Selecta Deslactosada 1 L",
+        "barcode": "7501055909193",
+        "sku": null,
+        "category_id": 3,
+        "price": 32,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Yakult 80 ml",
+        "barcode": "7501025511005",
+        "sku": null,
+        "category_id": 3,
+        "price": 7,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Yoghurt Lala Bebible Fresa 240 g",
+        "barcode": "7501020539400",
+        "sku": null,
+        "category_id": 3,
+        "price": 15,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Danonino Lunch 70 g",
+        "barcode": "7501032397845",
+        "sku": null,
+        "category_id": 3,
+        "price": 12,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Crema Lala 426 ml",
+        "barcode": "7501020561906",
+        "sku": null,
+        "category_id": 3,
+        "price": 38,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Queso Panela Lala 400 g",
+        "barcode": "7501020512311",
+        "sku": null,
+        "category_id": 3,
+        "price": 75,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Mantequilla Gloria Sin Sal 90 g",
+        "barcode": "7501013610024",
+        "sku": null,
+        "category_id": 3,
+        "price": 24,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Media Crema Lala 250 ml",
+        "barcode": "7501020515299",
+        "sku": null,
+        "category_id": 3,
+        "price": 24,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Pan Blanco Bimbo Grande 680 g",
+        "barcode": "7501000111206",
+        "sku": null,
+        "category_id": 4,
+        "price": 54,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Pan Integral Bimbo Grande 675 g",
+        "barcode": "7501000111466",
+        "sku": null,
+        "category_id": 4,
+        "price": 58,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Medias Noches Bimbo 340 g",
+        "barcode": "7501000111503",
+        "sku": null,
+        "category_id": 4,
+        "price": 45,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Gansito Marinela 50 g",
+        "barcode": "7501000153107",
+        "sku": null,
+        "category_id": 4,
+        "price": 19,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Pingüinos Marinela 80 g",
+        "barcode": "7501000153800",
+        "sku": null,
+        "category_id": 4,
+        "price": 23,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Barritas Marinela Fresa 335 g",
+        "barcode": "7501030467489",
+        "sku": null,
+        "category_id": 4,
+        "price": 48,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Mantecadas Tía Rosa",
+        "barcode": "7501030456322",
+        "sku": null,
+        "category_id": 4,
+        "price": 30,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Roles Bimbo 120 g",
+        "barcode": "7501000112128",
+        "sku": null,
+        "category_id": 4,
+        "price": 25,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Donas Bimbo 105 g",
+        "barcode": "7501000112500",
+        "sku": null,
+        "category_id": 4,
+        "price": 26,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Nito Bimbo 62 g",
+        "barcode": "7501000112784",
+        "sku": null,
+        "category_id": 4,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Chocoroles Marinela 100 g",
+        "barcode": "75002275",
+        "sku": null,
+        "category_id": 4,
+        "price": 22,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Tortillinas Tía Rosa 561 g",
+        "barcode": "7501030486664",
+        "sku": null,
+        "category_id": 4,
+        "price": 48,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Sabritas Original 45 g",
+        "barcode": "7501011165687",
+        "sku": null,
+        "category_id": 5,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Sabritas Limón 46 g",
+        "barcode": "7501011101678",
+        "sku": null,
+        "category_id": 5,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Ruffles Queso",
+        "barcode": "7501011115675",
+        "sku": null,
+        "category_id": 5,
+        "price": 21,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Doritos Nacho 61 g",
+        "barcode": "7501011123588",
+        "sku": null,
+        "category_id": 5,
+        "price": 21,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Cheetos Torciditos 58 g",
+        "barcode": "7501011143586",
+        "sku": null,
+        "category_id": 5,
+        "price": 17,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Takis Fuego 70 g",
+        "barcode": "7500810003671",
+        "sku": null,
+        "category_id": 5,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Fritos Sal y Limón 62 g",
+        "barcode": "7501011110335",
+        "sku": null,
+        "category_id": 5,
+        "price": 17,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Rancheritos 60 g",
+        "barcode": "7501011111028",
+        "sku": null,
+        "category_id": 5,
+        "price": 17,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Churrumais con Limoncito 62 g",
+        "barcode": "7500478005765",
+        "sku": null,
+        "category_id": 5,
+        "price": 14,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Chips Jalapeño Barcel",
+        "barcode": "7501000398409",
+        "sku": null,
+        "category_id": 5,
+        "price": 21,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Cacahuates Japoneses",
+        "barcode": "7502271153193",
+        "sku": null,
+        "category_id": 5,
+        "price": 15,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Paketaxo Botanero 270 g",
+        "barcode": "7501011154865",
+        "sku": null,
+        "category_id": 5,
+        "price": 45,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Galletas Marías Gamesa 177 g",
+        "barcode": "7500478010592",
+        "sku": null,
+        "category_id": 5,
+        "price": 18,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Chokis Clásica 63 g",
+        "barcode": "7501000635306",
+        "sku": null,
+        "category_id": 5,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Oreo 114 g",
+        "barcode": "7622210833662",
+        "sku": null,
+        "category_id": 5,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Canelitas Marinela 360 g",
+        "barcode": "7501030497981",
+        "sku": null,
+        "category_id": 5,
+        "price": 42,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Príncipe Marinela Crema de Cacahuate 105 g",
+        "barcode": "7501030422310",
+        "sku": null,
+        "category_id": 5,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Mamut Gamesa 44 g",
+        "barcode": "7501000651375",
+        "sku": null,
+        "category_id": 5,
+        "price": 8,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Chocolate Carlos V 18 g",
+        "barcode": "7501000913244",
+        "sku": null,
+        "category_id": 5,
+        "price": 10,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Snickers 48 g",
+        "barcode": "7506174512248",
+        "sku": null,
+        "category_id": 5,
+        "price": 20,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Pulparindo",
+        "barcode": "0725226066622",
+        "sku": null,
+        "category_id": 5,
+        "price": 5,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Halls Cherry-Lyptus",
+        "barcode": "7622210427045",
+        "sku": null,
+        "category_id": 5,
+        "price": 13,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Trident Hierbabuena",
+        "barcode": "75045616",
+        "sku": null,
+        "category_id": 5,
+        "price": 14,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Duvalín",
+        "barcode": "75059934",
+        "sku": null,
+        "category_id": 5,
+        "price": 5,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Kranky Ricolino 55 g",
+        "barcode": "0757528029630",
+        "sku": null,
+        "category_id": 5,
+        "price": 16,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Bubulubu 35 g",
+        "barcode": "07432354",
+        "sku": null,
+        "category_id": 5,
+        "price": 10,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Maruchan Camarón con Chile Piquín 64 g",
+        "barcode": "0041789001987",
+        "sku": null,
+        "category_id": 1,
+        "price": 16,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Maruchan Pollo 64 g",
+        "barcode": "0041789001918",
+        "sku": null,
+        "category_id": 1,
+        "price": 16,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Arroz Verde Valle",
+        "barcode": "7501071301469",
+        "sku": null,
+        "category_id": 1,
+        "price": 38,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Frijol Negro Verde Valle 1 kg",
+        "barcode": "7501071301742",
+        "sku": null,
+        "category_id": 1,
+        "price": 45,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Frijoles Negros Refritos La Costeña 430 g",
+        "barcode": "7501052420165",
+        "sku": null,
+        "category_id": 1,
+        "price": 26,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Atún Dolores en Agua 140 g",
+        "barcode": "7501045403007",
+        "sku": null,
+        "category_id": 1,
+        "price": 26,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Atún Tuny en Agua 140 g",
+        "barcode": "7501041415837",
+        "sku": null,
+        "category_id": 1,
+        "price": 22,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Jalapeños en Escabeche La Costeña 220 g",
+        "barcode": "7501017005765",
+        "sku": null,
+        "category_id": 1,
+        "price": 18,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Salsa Valentina 370 ml",
+        "barcode": "0097339000054",
+        "sku": null,
+        "category_id": 1,
+        "price": 19,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Jugo Maggi 100 ml",
+        "barcode": "7501001604110",
+        "sku": null,
+        "category_id": 1,
+        "price": 40,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Catsup 300 g",
+        "barcode": "75051686",
+        "sku": null,
+        "category_id": 1,
+        "price": 30,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Mayonesa Hellmann's Light 390 g",
+        "barcode": "7501005152013",
+        "sku": null,
+        "category_id": 1,
+        "price": 45,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Aceite Nutrioli DHA 850 ml",
+        "barcode": "7501039126745",
+        "sku": null,
+        "category_id": 1,
+        "price": 48,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Aceite 1-2-3 1 L",
+        "barcode": "7501026000126",
+        "sku": null,
+        "category_id": 1,
+        "price": 42,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Azúcar Estándar 1 kg",
+        "barcode": "7501954902332",
+        "sku": null,
+        "category_id": 1,
+        "price": 35,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Sal Yodada 1 kg",
+        "barcode": "0034587020021",
+        "sku": null,
+        "category_id": 1,
+        "price": 18,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Harina de Maíz Maseca 1 kg",
+        "barcode": "7501077400050",
+        "sku": null,
+        "category_id": 1,
+        "price": 25,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Sopa La Moderna Fideo 200 g",
+        "barcode": "7501018310028",
+        "sku": null,
+        "category_id": 1,
+        "price": 11,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Sopa La Moderna Codo 200 g",
+        "barcode": "7501018310523",
+        "sku": null,
+        "category_id": 1,
+        "price": 11,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Puré de Tomate Del Fuerte 210 g",
+        "barcode": "7501017005611",
+        "sku": null,
+        "category_id": 1,
+        "price": 10,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Nescafé Clásico 42 g",
+        "barcode": "7501000912803",
+        "sku": null,
+        "category_id": 1,
+        "price": 45,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Chocolate Abuelita",
+        "barcode": "7506475101462",
+        "sku": null,
+        "category_id": 1,
+        "price": 85,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Choco Milk 400 g",
+        "barcode": "7506205802157",
+        "sku": null,
+        "category_id": 1,
+        "price": 75,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Avena Quaker 3 Minutos 330 g",
+        "barcode": "7501761869118",
+        "sku": null,
+        "category_id": 1,
+        "price": 35,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Zucaritas 740 g",
+        "barcode": "7501008020234",
+        "sku": null,
+        "category_id": 1,
+        "price": 98,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Corn Flakes Kellogg's 500 g",
+        "barcode": "7501008023143",
+        "sku": null,
+        "category_id": 1,
+        "price": 68,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Leche Condensada La Lechera 387 g",
+        "barcode": "7501058617873",
+        "sku": null,
+        "category_id": 1,
+        "price": 36,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Leche Evaporada Carnation 360 g",
+        "barcode": "7501058611062",
+        "sku": null,
+        "category_id": 1,
+        "price": 26,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Mermelada McCormick Fresa 270 g",
+        "barcode": "7501003336125",
+        "sku": null,
+        "category_id": 1,
+        "price": 38,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Galletas Saladitas Gamesa 540 g",
+        "barcode": "7501000608058",
+        "sku": null,
+        "category_id": 1,
+        "price": 48,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Gelatina Dany Fresa 125 g",
+        "barcode": "75009076",
+        "sku": null,
+        "category_id": 3,
+        "price": 12,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Cerveza Corona 355 ml",
+        "barcode": "75032715",
+        "sku": null,
+        "category_id": 10,
+        "price": 23,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Cerveza Modelo Especial 355 ml",
+        "barcode": "7501064112546",
+        "sku": null,
+        "category_id": 10,
+        "price": 25,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Cerveza Tecate 340 ml",
+        "barcode": "75004132",
+        "sku": null,
+        "category_id": 10,
+        "price": 22,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Cerveza Indio 355 ml",
+        "barcode": "75019495",
+        "sku": null,
+        "category_id": 10,
+        "price": 22,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Cerveza XX Lager 355 ml",
+        "barcode": "75019693",
+        "sku": null,
+        "category_id": 10,
+        "price": 23,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Helado Holanda Cremissimo Chocolate 1 L",
+        "barcode": "7501130902095",
+        "sku": null,
+        "category_id": 11,
+        "price": 95,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Papilla Gerber 113 g",
+        "barcode": "75003388",
+        "sku": null,
+        "category_id": 9,
+        "price": 18,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Toallitas Húmedas Huggies 80 pzas",
+        "barcode": "7501943454811",
+        "sku": null,
+        "category_id": 9,
+        "price": 45,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Jabón Escudo Antibacterial 150 g",
+        "barcode": "7506425626175",
+        "sku": null,
+        "category_id": 6,
+        "price": 22,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Shampoo Head & Shoulders 650 ml",
+        "barcode": "7500435231268",
+        "sku": null,
+        "category_id": 6,
+        "price": 120,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Pasta Colgate Triple Acción 100 ml",
+        "barcode": "7509546000343",
+        "sku": null,
+        "category_id": 6,
+        "price": 35,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Toallas Saba Invisible",
+        "barcode": "7501019006371",
+        "sku": null,
+        "category_id": 6,
+        "price": 40,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Crema Nivea Creme",
+        "barcode": "4005808890590",
+        "sku": null,
+        "category_id": 6,
+        "price": 45,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Fabuloso Mar Fresco 1 L",
+        "barcode": "7501035910041",
+        "sku": null,
+        "category_id": 7,
+        "price": 30,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Cloralex El Rendidor 500 ml",
+        "barcode": "75000608",
+        "sku": null,
+        "category_id": 7,
+        "price": 15,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Pinol 3.785 L",
+        "barcode": "7501025403058",
+        "sku": null,
+        "category_id": 7,
+        "price": 95,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Lavatrastes Axion 490 ml",
+        "barcode": "7509546670591",
+        "sku": null,
+        "category_id": 7,
+        "price": 32,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Suavitel Cuidado Superior 2 L",
+        "barcode": "7509546684468",
+        "sku": null,
+        "category_id": 7,
+        "price": 58,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Suavizante Downy",
+        "barcode": "7500435160070",
+        "sku": null,
+        "category_id": 7,
+        "price": 38,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Huevo Blanco (kg)",
+        "barcode": null,
+        "sku": null,
+        "category_id": 1,
+        "price": 48,
+        "cost": null,
+        "unit": "kg",
+        "is_active": true
+    },
+    {
+        "name": "Tortilla de Maíz (kg)",
+        "barcode": null,
+        "sku": null,
+        "category_id": 1,
+        "price": 24,
+        "cost": null,
+        "unit": "kg",
+        "is_active": true
+    },
+    {
+        "name": "Hielo Bolsa 5 kg",
+        "barcode": null,
+        "sku": null,
+        "category_id": 11,
+        "price": 35,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Papel Higiénico Pétalo 4 rollos",
+        "barcode": null,
+        "sku": null,
+        "category_id": 6,
+        "price": 35,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Jabón Zote 400 g",
+        "barcode": null,
+        "sku": null,
+        "category_id": 7,
+        "price": 25,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Detergente Roma 1 kg",
+        "barcode": null,
+        "sku": null,
+        "category_id": 7,
+        "price": 40,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Detergente Foca 1 kg",
+        "barcode": null,
+        "sku": null,
+        "category_id": 7,
+        "price": 44,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Lavatrastes Salvo 750 ml",
+        "barcode": null,
+        "sku": null,
+        "category_id": 7,
+        "price": 38,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Rastrillo Gillette Prestobarba",
+        "barcode": null,
+        "sku": null,
+        "category_id": 6,
+        "price": 25,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    },
+    {
+        "name": "Chicle Bubaloo",
+        "barcode": null,
+        "sku": null,
+        "category_id": 5,
+        "price": 2,
+        "cost": null,
+        "unit": "pieza",
+        "is_active": true
+    }
+]
