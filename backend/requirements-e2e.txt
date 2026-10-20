@@ -1,0 +1,6 @@
+# Pruebas end-to-end en navegador. Se ejecutan en la imagen oficial
+# mcr.microsoft.com/playwright/python:v1.63.0-noble (trae Chromium y sus
+# dependencias); mantener la versión de playwright igual a la de la imagen.
+pytest==8.4.2
+playwright==1.63.0
+pytest-playwright==0.10.0
