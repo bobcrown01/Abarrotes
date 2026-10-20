@@ -66,6 +66,7 @@ services:
       - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
       - ./categorias.sql:/docker-entrypoint-initdb.d/02_categorias.sql:ro
       - ./insertar_roles.sql:/docker-entrypoint-initdb.d/03_roles.sql:ro
+      - ./productos_tiendita.sql:/docker-entrypoint-initdb.d/04_productos.sql:ro
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
