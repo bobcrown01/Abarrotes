@@ -5,3 +5,5 @@ psycopg[binary]==3.3.6
 pydantic==2.14.1
 pydantic-settings==2.16.0
 bcrypt==4.0.1
+python-telegram-bot>=22,<23
+httpx==0.28.1

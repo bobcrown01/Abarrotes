@@ -1,6 +1,7 @@
 """Punto de entrada de la API del POS de abarrotes."""
 
 import logging
+import os
 
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import text
@@ -15,12 +16,39 @@ from app.routes.products import router as products_router
 from app.routes.sales import router as sales_router
 from app.routes.users import router as users_router
 
+from contextlib import asynccontextmanager
+from app.telegram.bot import configurar_bot
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+
+    if not token:
+        raise RuntimeError("Falta TELEGRAM_BOT_TOKEN")
+
+    bot = configurar_bot(token)
+    await bot.initialize()
+    await bot.start()
+
+    # Inicia la recepción de mensajes de Telegram
+    await bot.updater.start_polling()
+
+    app.state.telegram_bot = bot
+
+    try:
+        yield
+    finally:
+        await bot.updater.stop()
+        await bot.stop()
+        await bot.shutdown()
+
 settings = get_settings()
 configure_logging(settings.log_level)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Abarrotes POS API",
+    lifespan=lifespan,  # Esta línea activa la inicialización de Telegram
     # La documentación interactiva solo se expone fuera de producción
     docs_url=None if settings.app_env == "production" else "/api/docs",
     redoc_url=None,
@@ -32,7 +60,6 @@ app.include_router(products_router, prefix="/api")
 app.include_router(inventory_router, prefix="/api")
 app.include_router(users_router, prefix="/api")
 app.include_router(sales_router, prefix="/api")
-
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
