@@ -6,16 +6,26 @@ from typing import Annotated
 from fastapi import APIRouter, Query, status
 
 from app.models.sale import Sale
-from app.routes.dependencies import SaleServiceDep
-from app.schemas.sale import PaymentCreate, SaleCreate, SaleItemCreate, SaleOut, SaleSummaryOut
+from app.routes.dependencies import LOGIN_REQUIRED, CurrentUserDep, SaleServiceDep
+from app.schemas.sale import (
+    PaymentCreate,
+    SaleCreate,
+    SaleFilters,
+    SaleItemCreate,
+    SaleOut,
+    SalesSummaryOut,
+    SaleSummaryOut,
+)
 
-router = APIRouter(tags=["ventas"])
+# Todas las operaciones de venta requieren haber iniciado sesión
+router = APIRouter(tags=["ventas"], dependencies=[LOGIN_REQUIRED])
 
 
 @router.post("/sales", response_model=SaleOut, status_code=status.HTTP_201_CREATED)
-def create_sale(data: SaleCreate, service: SaleServiceDep) -> Sale:
+def create_sale(data: SaleCreate, service: SaleServiceDep, user: CurrentUserDep) -> Sale:
     """Abre una venta en estado ``pendiente``."""
-    return service.create_sale(data)
+    # El cajero es quien tiene la sesión: no se puede vender a nombre de otro
+    return service.create_sale(data.model_copy(update={"user_id": user.id}))
 
 
 @router.post("/sales/items", response_model=SaleOut, status_code=status.HTTP_201_CREATED)
@@ -37,9 +47,23 @@ def close_sale(sale_id: int, service: SaleServiceDep) -> Sale:
 
 
 @router.post("/sales/{sale_id}/cancel", response_model=SaleOut)
-def cancel_sale(sale_id: int, service: SaleServiceDep) -> Sale:
-    """Cancela la venta; si ya estaba pagada regresa el inventario."""
-    return service.cancel_sale(sale_id)
+def cancel_sale(sale_id: int, service: SaleServiceDep, user: CurrentUserDep) -> Sale:
+    """Cancela la venta; si ya estaba pagada regresa el inventario.
+
+    Una venta pagada solo la cancela un rol de administración (403 si no). Una
+    pendiente la puede cancelar el cajero: así se limpia un cobro que falló.
+    """
+    return service.cancel_sale(sale_id, allow_paid=user.can_manage)
+
+
+# Va antes de /sales/{sale_id}: si no, FastAPI lee "summary" como id y responde 422
+@router.get("/sales/summary", response_model=SalesSummaryOut)
+def summarize_sales(
+    service: SaleServiceDep, filters: Annotated[SaleFilters, Query()]
+) -> SalesSummaryOut:
+    """Cuenta y suma las ventas pagadas que coinciden con los filtros."""
+    count, total = service.summarize_sales(filters)
+    return SalesSummaryOut(count=count, total=total)
 
 
 @router.get("/sales/{sale_id}", response_model=SaleOut)
@@ -49,10 +73,6 @@ def get_sale(sale_id: int, service: SaleServiceDep) -> Sale:
 
 
 @router.get("/sales", response_model=list[SaleSummaryOut])
-def list_sales(
-    service: SaleServiceDep,
-    limit: Annotated[int, Query(ge=1, le=100)] = 50,
-    offset: Annotated[int, Query(ge=0)] = 0,
-) -> Sequence[Sale]:
-    """Lista las ventas más recientes (paginado)."""
-    return service.list_sales(limit, offset)
+def list_sales(service: SaleServiceDep, filters: Annotated[SaleFilters, Query()]) -> Sequence[Sale]:
+    """Lista las ventas más recientes, por estado, folio y rango de fechas (paginado)."""
+    return service.list_sales(filters)

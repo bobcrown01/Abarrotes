@@ -6,21 +6,29 @@ si no, FastAPI intenta leer "movements" como id y responde 422.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
-from app.routes.dependencies import InventoryServiceDep
+from app.routes.dependencies import (
+    LOGIN_REQUIRED,
+    MANAGER_REQUIRED,
+    InventoryServiceDep,
+    require_manager,
+)
 from app.schemas.inventory import (
     InventoryMovementCreate,
     InventoryMovementOut,
+    MinStockUpdate,
     MovementFilters,
     MovementListOut,
     ProductMovementOut,
     StockFilters,
     StockOut,
 )
+from app.services.auth_service import CurrentUser
 from app.services.inventory_service import MovementView, RecordedMovement, StockView
 
-router = APIRouter(tags=["inventario"])
+# Consultar requiere sesión; registrar movimientos, un rol de administración
+router = APIRouter(tags=["inventario"], dependencies=[LOGIN_REQUIRED])
 
 
 @router.post(
@@ -29,14 +37,25 @@ router = APIRouter(tags=["inventario"])
     status_code=status.HTTP_201_CREATED,
 )
 def create_inventory_movement(
-    data: InventoryMovementCreate, service: InventoryServiceDep
+    data: InventoryMovementCreate,
+    service: InventoryServiceDep,
+    user: Annotated[CurrentUser, Depends(require_manager)],
 ) -> RecordedMovement:
     """Registra una entrada, salida o ajuste de inventario.
 
     Responde 404 si el producto no existe y 409 si una salida deja
     existencias negativas.
     """
-    return service.record_movement(data)
+    # El responsable es quien tiene la sesión, no lo que diga la petición
+    return service.record_movement(data.model_copy(update={"user_id": user.id}))
+
+
+@router.put(
+    "/inventory/{product_id}/min-stock", response_model=StockOut, dependencies=[MANAGER_REQUIRED]
+)
+def set_min_stock(product_id: int, data: MinStockUpdate, service: InventoryServiceDep) -> StockView:
+    """Define desde cuánto un producto se marca "Por surtir". 404 si no existe."""
+    return service.set_min_stock(product_id, data.min_stock)
 
 
 @router.get("/inventory", response_model=list[StockOut])

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes · Abarrotes POS</title>
+
+    <link rel="stylesheet" href="static/css/app.css">
+    <link rel="stylesheet" href="static/css/pos.css">
+    <link rel="stylesheet" href="static/fontawesome/css/all.min.css">
+
+    <script type="module" src="static/js/reports/reports-page.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+
+    <aside class="app-sidebar" id="appSidebar"></aside>
+
+    <main class="app-main" id="main">
+
+        <header class="page-header">
+            <div>
+                <h1>Reportes</h1>
+                <p class="page-subtitle" id="reportPeriod" aria-live="polite">Cargando…</p>
+            </div>
+        </header>
+
+        <!-- Periodo: atajos y rango libre -->
+        <form class="card toolbar toolbar-wrap report-filters" id="reportFilters">
+            <div class="chip-row report-presets" role="group" aria-label="Periodo">
+                <button type="button" class="chip" data-days="1" aria-pressed="false">Hoy</button>
+                <button type="button" class="chip" data-days="7" aria-pressed="true">7 días</button>
+                <button type="button" class="chip" data-days="30" aria-pressed="false">30 días</button>
+            </div>
+            <div class="filter-field">
+                <label for="reportFrom">Desde</label>
+                <input class="input" id="reportFrom" type="date">
+            </div>
+            <div class="filter-field">
+                <label for="reportTo">Hasta</label>
+                <input class="input" id="reportTo" type="date">
+            </div>
+        </form>
+
+        <!-- Cifras principales -->
+        <section class="stat-grid" aria-label="Resumen del periodo" id="reportStats" aria-busy="true">
+            <div class="card stat-tile"><span class="stat-label">Vendido</span><strong class="stat-value" id="statTotal">—</strong></div>
+            <div class="card stat-tile"><span class="stat-label">Ventas</span><strong class="stat-value" id="statCount">—</strong></div>
+            <div class="card stat-tile"><span class="stat-label">Ticket promedio</span><strong class="stat-value" id="statAverage">—</strong></div>
+            <div class="card stat-tile"><span class="stat-label">Ganancia</span><strong class="stat-value" id="statProfit">—</strong></div>
+        </section>
+        <p class="alert alert-warning" id="costWarning" role="note" hidden></p>
+
+        <div class="report-tables">
+            <section class="card" aria-labelledby="topTitle">
+                <h2 class="cash-history-title" id="topTitle">Lo más vendido</h2>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <caption class="visually-hidden">Productos que más dinero dejaron en el periodo</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Producto</th>
+                                <th scope="col" class="num">Cantidad</th>
+                                <th scope="col" class="num">Vendido</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topRows"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="idleTitle">
+                <h2 class="cash-history-title" id="idleTitle">Sin ventas en el periodo</h2>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <caption class="visually-hidden">Productos activos que no se vendieron</caption>
+                        <thead><tr><th scope="col">Producto</th></tr></thead>
+                        <tbody id="idleRows"></tbody>
+                    </table>
+                </div>
+                <p class="hint report-more" id="idleMore" hidden></p>
+            </section>
+        </div>
+
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

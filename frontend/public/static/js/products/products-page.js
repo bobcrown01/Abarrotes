@@ -64,7 +64,10 @@ function productRow(p) {
             <td class="num"><strong>${formatMoney(p.price)}</strong></td>
             <td>${status}</td>
             <td class="actions">
-                <button type="button" class="icon-btn icon-btn-danger" data-delete="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar">
+                <button type="button" class="icon-btn manager-only" data-edit="${p.id}" aria-label="Editar ${escapeHtml(p.name)}" title="Editar">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="icon-btn icon-btn-danger manager-only" data-delete="${p.id}" aria-label="Eliminar ${escapeHtml(p.name)}" title="Eliminar">
                     <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
                 </button>
             </td>
@@ -127,6 +130,10 @@ const form = setupProductForm({
         showToast("Producto creado correctamente");
         loadProducts();
     },
+    onUpdated: () => {
+        showToast("Producto actualizado");
+        loadProducts();
+    },
 });
 
 const deleteDialog = setupDeleteDialog({
@@ -139,6 +146,15 @@ const deleteDialog = setupDeleteDialog({
 document.getElementById("btnNewProduct")?.addEventListener("click", form.open);
 searchInput.addEventListener("input", render);
 categoryFilter.addEventListener("change", render);
+
+// Botón de editar en cada renglón: abre el panel con los datos del producto
+rows.addEventListener("click", event => {
+    const button = /** @type {HTMLElement} */ (event.target).closest("[data-edit]");
+    if (!button) return;
+    const id = Number(/** @type {HTMLElement} */ (button).dataset.edit);
+    const product = state.products.find(p => p.id === id);
+    if (product) form.openEdit(product);
+});
 
 rows.addEventListener("click", event => {
     const button = /** @type {HTMLElement} */ (event.target).closest("[data-delete]");

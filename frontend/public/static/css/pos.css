@@ -172,8 +172,7 @@
     background: var(--surface-alt);
 }
 
-.ticket-cashier label { flex: none; color: var(--text-muted); font-weight: 600; }
-.ticket-cashier .input { padding: 6px 10px; }
+.ticket-cashier-label { flex: none; color: var(--text-muted); font-weight: 600; }
 
 .cart-lines {
     flex: 1;
@@ -274,6 +273,8 @@
 }
 
 .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+
+.btn-print-last { justify-content: center; width: 100%; margin-top: 8px; }
 
 /* ---------- Ventana de cobro ---------- */
 

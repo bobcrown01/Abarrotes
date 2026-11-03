@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from datetime import datetime, time, timedelta
 
-from sqlalchemy import Row, Select, select
+from sqlalchemy import Row, Select, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.inventory import Inventory
@@ -79,6 +79,21 @@ class InventoryRepository:
             statement = statement.where(Inventory.quantity <= 0)
 
         statement = statement.order_by(Product.name).limit(filters.limit).offset(filters.offset)
+        return self._db.execute(statement).all()
+
+    def list_low_stock(self) -> Sequence[Row[tuple[Inventory, Product]]]:
+        """Regresa productos activos agotados o en su mínimo, los más escasos primero.
+
+        Con mínimo 0 solo aparece al agotarse, igual que en la pantalla de Inventario.
+        """
+        statement = (
+            self._stock_query()
+            .where(
+                Product.is_active.is_(True),
+                or_(Inventory.quantity <= 0, Inventory.quantity <= Inventory.min_stock),
+            )
+            .order_by(Inventory.quantity, Product.name)
+        )
         return self._db.execute(statement).all()
 
     def get_stock(self, product_id: int) -> Row[tuple[Inventory, Product]] | None:

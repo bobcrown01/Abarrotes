@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes · Abarrotes POS</title>
+
+    <link rel="stylesheet" href="static/css/app.css">
+    <link rel="stylesheet" href="static/css/pos.css">
+    <link rel="stylesheet" href="static/fontawesome/css/all.min.css">
+
+    <script type="module" src="static/js/customers/customers-page.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+
+    <aside class="app-sidebar" id="appSidebar"></aside>
+
+    <main class="app-main" id="main">
+
+        <header class="page-header">
+            <div>
+                <h1>Clientes</h1>
+                <p class="page-subtitle" id="customerSummary" aria-live="polite">Cargando…</p>
+            </div>
+            <button type="button" class="btn btn-primary manager-only" id="btnNewCustomer">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Nuevo cliente
+            </button>
+        </header>
+
+        <section class="card" aria-labelledby="customersTitle">
+            <h2 class="visually-hidden" id="customersTitle">Lista de clientes</h2>
+
+            <div class="toolbar" role="search">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <label class="visually-hidden" for="customerSearch">Buscar clientes</label>
+                    <input type="search" id="customerSearch" placeholder="Buscar por nombre o teléfono" autocomplete="off">
+                </div>
+                <label class="visually-hidden" for="customerFilter">Filtrar por deuda</label>
+                <select id="customerFilter" class="input select-filter">
+                    <option value="">Todos los clientes</option>
+                    <option value="debt">Con deuda</option>
+                </select>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table" id="customerTable" aria-busy="true">
+                    <caption class="visually-hidden">Clientes y sus cuentas de fiado</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Cliente</th>
+                            <th scope="col">Teléfono</th>
+                            <th scope="col" class="num">Debe</th>
+                            <th scope="col" class="num">Límite de fiado</th>
+                            <th scope="col" class="num">Disponible</th>
+                            <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerRows"></tbody>
+                </table>
+                <div class="empty-state" id="customerEmpty" hidden>
+                    <i class="fa-solid fa-users" aria-hidden="true"></i>
+                    <p></p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Alta o edición de cliente -->
+    <dialog class="app-dialog" id="customerDialog" aria-labelledby="customerDialogTitle">
+        <form id="customerForm" novalidate>
+            <header class="dialog-header">
+                <h2 id="customerDialogTitle">Nuevo cliente</h2>
+                <button type="button" class="icon-btn" id="btnCloseCustomer" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </header>
+            <div class="dialog-body">
+                <div class="field">
+                    <label for="customerName">Nombre</label>
+                    <input class="input" id="customerName" maxlength="150" required>
+                </div>
+                <div class="field">
+                    <label for="customerPhone">Teléfono (opcional)</label>
+                    <input class="input" id="customerPhone" maxlength="30" inputmode="tel">
+                </div>
+                <div class="field">
+                    <label for="customerLimit">Límite de fiado</label>
+                    <div class="input-prefix">
+                        <span aria-hidden="true">$</span>
+                        <input class="input" id="customerLimit" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" aria-describedby="customerLimitHint">
+                    </div>
+                </div>
+                <p class="hint" id="customerLimitHint">Con 0 no se le puede fiar.</p>
+                <div class="alert alert-error" id="customerError" role="alert" hidden></div>
+            </div>
+            <footer class="dialog-footer dialog-actions">
+                <button type="button" class="btn btn-ghost" id="btnCancelCustomer">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btnSaveCustomer">Guardar</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <!-- Abono a la cuenta -->
+    <dialog class="app-dialog" id="abonoDialog" aria-labelledby="abonoTitle">
+        <form id="abonoForm" novalidate>
+            <header class="dialog-header">
+                <h2 id="abonoTitle">Registrar abono</h2>
+                <button type="button" class="icon-btn" id="btnCloseAbono" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </header>
+            <div class="dialog-body">
+                <div class="pay-total">
+                    <span id="abonoCustomer"></span>
+                    <strong id="abonoDebt"></strong>
+                </div>
+                <div class="field">
+                    <label for="abonoAmount">Importe del abono</label>
+                    <div class="input-prefix">
+                        <span aria-hidden="true">$</span>
+                        <input class="input input-lg" id="abonoAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="abonoMethod">Método de pago</label>
+                    <select class="input" id="abonoMethod">
+                        <option value="efectivo">Efectivo</option>
+                        <option value="debito">Débito</option>
+                        <option value="credito">Crédito</option>
+                        <option value="transferencia">Transferencia</option>
+                    </select>
+                </div>
+                <div class="alert alert-error" id="abonoError" role="alert" hidden></div>
+
+                <h3 class="section-title">Abonos recientes</h3>
+                <ul class="abono-history" id="abonoHistory" aria-live="polite"></ul>
+            </div>
+            <footer class="dialog-footer dialog-actions">
+                <button type="button" class="btn btn-ghost" id="btnCancelAbono">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btnSaveAbono">Registrar abono</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

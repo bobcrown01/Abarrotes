@@ -1,6 +1,8 @@
 /** Panel lateral con el formulario de alta de producto. */
 
-import { ApiError, createProduct } from "../lib/api.js";
+/* El mismo panel sirve para editar: openEdit() lo abre con los datos del producto. */
+
+import { ApiError, createProduct, updateProduct } from "../lib/api.js";
 import { escapeHtml, formatMoney } from "../lib/format.js";
 
 /** @typedef {import("../lib/api.js").Category} Category */
@@ -10,21 +12,27 @@ import { escapeHtml, formatMoney } from "../lib/format.js";
  * Conecta el formulario con la API.
  * @param {Object} options
  * @param {() => void} options.onCreated Se llama después de guardar con éxito.
+ * @param {() => void} [options.onUpdated] Se llama después de guardar una edición.
  * @returns {{ open: () => void, setCategories: (categories: Category[]) => void }}
+ *     También regresa ``openEdit(product)`` para editar un producto existente.
  */
-export function setupProductForm({ onCreated }) {
+export function setupProductForm({ onCreated, onUpdated }) {
     const drawer = /** @type {HTMLElement} */ (document.getElementById("productDrawer"));
     const overlay = /** @type {HTMLElement} */ (document.getElementById("drawerOverlay"));
     const form = /** @type {HTMLFormElement} */ (document.getElementById("productForm"));
     const errorBox = /** @type {HTMLElement} */ (document.getElementById("formError"));
     const marginHint = /** @type {HTMLElement} */ (document.getElementById("marginHint"));
     const saveButton = /** @type {HTMLButtonElement} */ (document.getElementById("btnSave"));
+    const title = /** @type {HTMLElement} */ (document.getElementById("drawerTitle"));
     const fields = /** @type {HTMLFormControlsCollection & Record<string, HTMLInputElement>} */ (
         form.elements
     );
 
     /** @type {HTMLElement|null} Elemento que abrió el panel, para devolverle el foco. */
     let opener = null;
+
+    /** @type {number|null} Producto que se está editando; null si es un alta. */
+    let editingId = null;
 
     function showError(message) {
         errorBox.textContent = message;
@@ -37,10 +45,37 @@ export function setupProductForm({ onCreated }) {
     }
 
     function open() {
-        opener = /** @type {HTMLElement|null} */ (document.activeElement);
+        editingId = null;
+        title.textContent = "Nuevo producto";
         form.reset();
-        clearErrors();
         marginHint.textContent = "";
+        show();
+    }
+
+    /**
+     * Abre el panel con los datos actuales del producto para cambiarlos.
+     * @param {import("../lib/api.js").Product} product
+     */
+    function openEdit(product) {
+        editingId = product.id;
+        title.textContent = "Editar producto";
+        form.reset();
+        fields.name.value = product.name;
+        fields.category_id.value = String(product.category_id);
+        fields.barcode.value = product.barcode ?? "";
+        fields.sku.value = product.sku ?? "";
+        fields.price.value = String(product.price);
+        fields.cost.value = product.cost === null ? "" : String(product.cost);
+        fields.unit.value = product.unit ?? "pieza";
+        fields.is_active.checked = product.is_active;
+        updateMargin();
+        show();
+    }
+
+    /** Muestra el panel, ya sea para un alta o para una edición. */
+    function show() {
+        opener = /** @type {HTMLElement|null} */ (document.activeElement);
+        clearErrors();
         overlay.hidden = false;
         drawer.hidden = false;
         // Un frame para que la transición CSS arranque después de mostrarlo
@@ -116,9 +151,16 @@ export function setupProductForm({ onCreated }) {
         saveButton.disabled = true;
         saveButton.textContent = "Guardando…";
         try {
-            await createProduct(data);
-            close();
-            onCreated();
+            // Alta o edición, según con qué se abrió el panel
+            if (editingId === null) {
+                await createProduct(data);
+                close();
+                onCreated();
+            } else {
+                await updateProduct(editingId, data);
+                close();
+                onUpdated?.();
+            }
         } catch (err) {
             showError(err instanceof ApiError ? err.message : "Error inesperado al guardar");
             if (!(err instanceof ApiError)) console.error(err);
@@ -146,5 +188,5 @@ export function setupProductForm({ onCreated }) {
         if (e.key === "Escape" && !drawer.hidden) close();
     });
 
-    return { open, setCategories };
+    return { open, openEdit, setCategories };
 }

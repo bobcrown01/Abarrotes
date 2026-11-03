@@ -15,15 +15,21 @@ class Settings(BaseSettings):
         db_pool_size: Conexiones permanentes del pool. Bajo a propósito para
             la Raspberry Pi Zero 2 W.
         db_max_overflow: Conexiones extra permitidas en picos.
+        telegram_chat_id: Chat de Telegram que recibe los avisos y el único al
+            que responde el bot (``TELEGRAM_CHAT_ID``). Sin él no se envían avisos.
+        store_timezone: Zona horaria de la tienda, para saber qué es "hoy".
     """
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # env_ignore_empty: una variable definida pero vacía cuenta como no definida
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_ignore_empty=True)
 
     database_url: str
     app_env: str = "production"
     log_level: str = "INFO"
     db_pool_size: int = 3
     db_max_overflow: int = 2
+    telegram_chat_id: int | None = None
+    store_timezone: str = "America/Mexico_City"
 
 
 @lru_cache

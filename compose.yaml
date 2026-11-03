@@ -21,7 +21,10 @@ services:
       DATABASE_URL: "postgresql+psycopg://app_user:${POSTGRES_PASSWORD}@db:5432/abarrotes"
       PAC_BASE_URL: "${PAC_BASE_URL:-}"
       PAC_API_KEY: "${PAC_API_KEY:-}"
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      # Opcional: sin token el POS funciona y el bot queda apagado
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN:-}"
+      # Chat que recibe los avisos del corte; el bot solo le responde a él
+      TELEGRAM_CHAT_ID: "${TELEGRAM_CHAT_ID:-}"
       APP_ENV: "production"
     depends_on:
       db:

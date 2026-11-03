@@ -6,6 +6,7 @@ que cumplen los mismos protocolos que los reales.
 
 import os
 from collections.abc import Iterator, Sequence
+from datetime import datetime
 from decimal import Decimal
 
 # Debe definirse antes de importar la app; create_engine no se conecta.
@@ -20,12 +21,18 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
+from app.models.cash_session import CashSession
 from app.models.products import Category, Product
 from app.models.role import Role
 from app.models.user import User
-from app.routes.dependencies import get_product_service
+from app.routes.dependencies import get_current_user, get_product_service
+from app.services.auth_service import CurrentUser, login_throttle
 from app.services.product_service import ProductService
 from app.utils.security import hash_password
+
+# Las pruebas de negocio corren como administrador; el login y los permisos se
+# prueban aparte en test_auth_api.py con el fixture ``anon_client``
+ADMIN = CurrentUser(id=1, username="caja1", role="admin")
 
 
 class FakeCategoryRepository:
@@ -99,6 +106,7 @@ def service(products: FakeProductRepository, categories: FakeCategoryRepository)
 @pytest.fixture
 def client(service: ProductService) -> Iterator[TestClient]:
     app.dependency_overrides[get_product_service] = lambda: service
+    app.dependency_overrides[get_current_user] = lambda: ADMIN
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
@@ -125,6 +133,15 @@ def db_session() -> Iterator[Session]:
             Product(id=1, name="Coca Cola 600ml", category_id=1, price=Decimal("18.50")),
             Product(id=2, name="Sabritas", category_id=1, price=Decimal("21.00")),
             Product(id=3, name="Descontinuado", category_id=1, price=Decimal("5"), is_active=False),
+            # Caja abierta: sin ella no se puede vender. test_cash_api.py prueba el ciclo
+            # Fecha fija en el pasado: SQLite compara fechas como texto y, en el mismo
+            # segundo, un pago parecería anterior a la apertura
+            CashSession(
+                id=1,
+                opened_by=1,
+                opening_amount=Decimal("100"),
+                opened_at=datetime(2020, 1, 1),
+            ),
         ]
     )
     session.commit()
@@ -137,6 +154,17 @@ def db_session() -> Iterator[Session]:
 @pytest.fixture
 def db_client(db_session: Session) -> Iterator[TestClient]:
     app.dependency_overrides[get_db] = lambda: db_session
+    app.dependency_overrides[get_current_user] = lambda: ADMIN
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def anon_client(db_session: Session) -> Iterator[TestClient]:
+    """Cliente con la base de prueba y el login real: empieza sin sesión."""
+    app.dependency_overrides[get_db] = lambda: db_session
+    login_throttle.reset("caja1")
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

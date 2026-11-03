@@ -150,6 +150,10 @@ class InventoryService:
             raise StockNotFoundError()
         return StockView.build(*row)
 
+    def low_stock(self) -> list[StockView]:
+        """Regresa los productos activos agotados o en su mínimo, para avisar que hay que surtir."""
+        return [StockView.build(inv, prod) for inv, prod in self._inventory.list_low_stock()]
+
     def list_movements(self, filters: MovementFilters) -> list[MovementView]:
         """Regresa el historial de movimientos filtrado.
 
@@ -177,6 +181,36 @@ class InventoryService:
         return self.list_movements(filters)
 
     # ---------- Escrituras ----------
+
+    def set_min_stock(self, product_id: int, min_stock: Decimal) -> StockView:
+        """Define el mínimo de un producto.
+
+        Si aún no llevaba control de existencias, se lo inicia en cero: el
+        mínimo solo tiene sentido comparado contra una cantidad.
+
+        Args:
+            product_id: Id del producto.
+            min_stock: Existencias desde las que se marca "Por surtir".
+
+        Returns:
+            Las existencias con el mínimo nuevo.
+
+        Raises:
+            ProductNotFoundError: Si el producto no existe.
+        """
+        product = self._products.get(product_id)
+        if product is None:
+            raise ProductNotFoundError()
+
+        inventory = self._inventory.get_for_update(product_id)
+        if inventory is None:
+            inventory = Inventory(product_id=product_id, quantity=Decimal("0"))
+            self._inventory.add(inventory)
+        inventory.min_stock = min_stock
+        self._uow.commit()
+
+        logger.info("Mínimo de existencias producto=%s → %s", product_id, min_stock)
+        return StockView.build(inventory, product)
 
     def record_movement(self, data: InventoryMovementCreate) -> RecordedMovement:
         """Registra un movimiento manual (entrada, salida o ajuste) y lo confirma.

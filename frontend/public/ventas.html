@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas · Abarrotes POS</title>
+
+    <link rel="stylesheet" href="static/css/app.css">
+    <link rel="stylesheet" href="static/fontawesome/css/all.min.css">
+
+    <script type="module" src="static/js/sales/sales-page.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+
+    <aside class="app-sidebar" id="appSidebar"></aside>
+
+    <main class="app-main" id="main">
+
+        <header class="page-header">
+            <div>
+                <h1>Ventas</h1>
+                <p class="page-subtitle" id="salesSummary" aria-live="polite">Cargando…</p>
+            </div>
+        </header>
+
+        <section class="card" aria-labelledby="salesTitle">
+            <h2 class="visually-hidden" id="salesTitle">Historial de ventas</h2>
+
+            <!-- Filtros: por omisión muestra las ventas de hoy -->
+            <form class="toolbar toolbar-wrap" id="salesFilters" role="search">
+                <div class="filter-field">
+                    <label for="filterFrom">Desde</label>
+                    <input class="input" id="filterFrom" name="from" type="date">
+                </div>
+                <div class="filter-field">
+                    <label for="filterTo">Hasta</label>
+                    <input class="input" id="filterTo" name="to" type="date">
+                </div>
+                <div class="filter-field">
+                    <label for="filterStatus">Estado</label>
+                    <select class="input" id="filterStatus" name="status">
+                        <option value="">Todos</option>
+                        <option value="pagada">Pagadas</option>
+                        <option value="pendiente">Pendientes</option>
+                        <option value="cancelada">Canceladas</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="filterFolio">Folio</label>
+                    <input class="input" id="filterFolio" name="folio" type="search" maxlength="50" placeholder="V-000123" autocomplete="off">
+                </div>
+                <button type="button" class="btn btn-ghost" id="btnFilterAll">Ver todas</button>
+            </form>
+
+            <div class="table-wrap">
+                <table class="data-table" id="salesTable" aria-busy="true">
+                    <caption class="visually-hidden">Lista de ventas</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Folio</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Cajero</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col" class="num">Total</th>
+                            <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesRows"></tbody>
+                </table>
+                <div class="empty-state" id="salesEmpty" hidden>
+                    <i class="fa-solid fa-receipt" aria-hidden="true"></i>
+                    <p></p>
+                </div>
+            </div>
+
+            <nav class="pager" id="salesPager" aria-label="Páginas de ventas" hidden></nav>
+        </section>
+
+    </main>
+
+    <!-- Detalle de venta -->
+    <dialog class="app-dialog sale-dialog" id="saleDialog" aria-labelledby="saleTitle">
+        <header class="dialog-header">
+            <h2 id="saleTitle">Venta</h2>
+            <button type="button" class="icon-btn" id="btnCloseSale" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </header>
+        <div class="dialog-body">
+            <div id="saleDetail" aria-live="polite"></div>
+            <div class="alert alert-error" id="saleError" role="alert" hidden></div>
+        </div>
+        <footer class="dialog-footer dialog-actions">
+            <button type="button" class="btn btn-ghost" id="btnSalePrint" hidden><i class="fa-solid fa-print" aria-hidden="true"></i> Imprimir</button>
+            <button type="button" class="btn btn-ghost" id="btnSaleSecondary">Cerrar</button>
+            <button type="button" class="btn btn-danger manager-only" id="btnSaleCancel" hidden>Cancelar venta</button>
+        </footer>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

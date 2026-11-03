@@ -1,6 +1,6 @@
 /** Ventana de cobro: método de pago, efectivo recibido y cambio. */
 
-import { formatMoney } from "../lib/format.js";
+import { escapeHtml, formatMoney } from "../lib/format.js";
 
 /** @typedef {import("./checkout.js").PaymentChoice} PaymentChoice */
 
@@ -29,6 +29,7 @@ export function quickCashOptions(total) {
  * @param {(payment: PaymentChoice) => Promise<void>} options.onConfirm Registra la
  *     venta; si lanza un error, la ventana sigue abierta y lo muestra.
  * @returns {{ open: (total: number) => void }}
+ *     También regresa ``setCustomers(customers)`` con los clientes a los que se puede fiar.
  */
 export function setupPaymentDialog({ onConfirm }) {
     const dialog = /** @type {HTMLDialogElement} */ (document.getElementById("paymentDialog"));
@@ -41,7 +42,35 @@ export function setupPaymentDialog({ onConfirm }) {
     const errorBox = /** @type {HTMLElement} */ (document.getElementById("payError"));
     const confirmButton = /** @type {HTMLButtonElement} */ (document.getElementById("btnConfirmPay"));
 
+    const creditSection = /** @type {HTMLElement} */ (document.getElementById("creditSection"));
+    const creditSelect = /** @type {HTMLSelectElement} */ (document.getElementById("creditCustomer"));
+    const creditHint = /** @type {HTMLElement} */ (document.getElementById("creditHint"));
+
     let total = 0;
+
+    /** @type {import("../lib/api.js").Customer[]} Clientes para la opción de fiado. */
+    let customers = [];
+
+    /**
+     * Lo que aún se le puede fiar al cliente elegido.
+     * @returns {number|null} Null si no hay cliente elegido.
+     */
+    function availableCredit() {
+        const customer = customers.find(c => c.id === Number(creditSelect.value));
+        return customer ? customer.credit_limit - customer.balance : null;
+    }
+
+    /** Muestra el crédito disponible; regresa si alcanza para esta venta. */
+    function updateCredit() {
+        const available = availableCredit();
+        if (available === null) {
+            creditHint.textContent = customers.length ? "" : "No hay clientes: dalos de alta en Clientes.";
+            return false;
+        }
+        const enough = available >= total;
+        creditHint.textContent = `Disponible: ${formatMoney(available)}${enough ? "" : " · No alcanza para esta venta"}`;
+        return enough;
+    }
 
     /** @returns {PaymentChoice["method"]} */
     const selectedMethod = () =>
@@ -57,8 +86,13 @@ export function setupPaymentDialog({ onConfirm }) {
         const isCash = selectedMethod() === "efectivo";
         cashSection.hidden = !isCash;
 
+        // Fiado: exige un cliente con crédito suficiente
+        const isCredit = selectedMethod() === "venta_credito";
+        creditSection.hidden = !isCredit;
+        const creditBlocked = isCredit && !updateCredit();
+
         const cash = received();
-        const short = isCash && (cash === null || cash < total);
+        const short = creditBlocked || (isCash && (cash === null || cash < total));
         changeLabel.textContent = isCash && cash !== null && cash >= total
             ? formatMoney(cash - total)
             : "—";
@@ -90,7 +124,11 @@ export function setupPaymentDialog({ onConfirm }) {
         confirmButton.textContent = "Registrando venta…";
         errorBox.hidden = true;
         try {
-            await onConfirm({ method, received: method === "efectivo" ? received() : null });
+            await onConfirm({
+                method,
+                received: method === "efectivo" ? received() : null,
+                customerId: method === "venta_credito" ? Number(creditSelect.value) : null,
+            });
             dialog.close();
         } catch (err) {
             errorBox.textContent = err instanceof Error ? err.message : "Error al registrar la venta";
@@ -112,5 +150,17 @@ export function setupPaymentDialog({ onConfirm }) {
     form.addEventListener("submit", submit);
     document.getElementById("btnCancelPay")?.addEventListener("click", () => dialog.close());
 
-    return { open };
+    /**
+     * Carga la lista de clientes para fiar; conserva el elegido si sigue existiendo.
+     * @param {import("../lib/api.js").Customer[]} list
+     */
+    function setCustomers(list) {
+        customers = list;
+        const chosen = creditSelect.value;
+        creditSelect.innerHTML = '<option value="">Elige un cliente</option>'
+            + list.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+        creditSelect.value = list.some(c => String(c.id) === chosen) ? chosen : "";
+    }
+
+    return { open, setCustomers };
 }

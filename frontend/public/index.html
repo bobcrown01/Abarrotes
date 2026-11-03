@@ -44,10 +44,8 @@
             </header>
 
             <div class="ticket-cashier">
-                <label for="cashierSelect"><i class="fa-solid fa-user" aria-hidden="true"></i> Cajero</label>
-                <select class="input" id="cashierSelect">
-                    <option value="">Cargando…</option>
-                </select>
+                <span class="ticket-cashier-label"><i class="fa-solid fa-user" aria-hidden="true"></i> Cajero</span>
+                <strong id="cashierName">…</strong>
             </div>
 
             <ul class="cart-lines" id="cartLines" aria-label="Productos en la venta" aria-live="polite"></ul>
@@ -57,11 +55,17 @@
             </div>
 
             <footer class="ticket-footer">
+                <!-- Aviso: sin caja abierta no se puede cobrar -->
+                <p class="alert alert-error" id="cashClosedNotice" hidden>La caja está cerrada. <a href="caja.html">Ábrela para cobrar</a>.</p>
                 <div class="ticket-total">
                     <span id="cartCount">0 artículos</span>
                     <strong id="cartTotal">$0.00</strong>
                 </div>
                 <button type="button" class="btn btn-primary btn-charge" id="btnCharge" aria-keyshortcuts="F12" disabled>Cobrar</button>
+                <!-- Aparece después de cobrar, para imprimir el ticket de esa venta -->
+                <button type="button" class="btn btn-ghost btn-print-last" id="btnPrintLast" hidden>
+                    <i class="fa-solid fa-print" aria-hidden="true"></i> <span>Imprimir último ticket</span>
+                </button>
             </footer>
         </aside>
 
@@ -87,7 +91,19 @@
                     <label class="method-option"><input type="radio" name="method" value="debito"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><span>Débito</span></label>
                     <label class="method-option"><input type="radio" name="method" value="credito"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><span>Crédito</span></label>
                     <label class="method-option"><input type="radio" name="method" value="transferencia"><i class="fa-solid fa-building-columns" aria-hidden="true"></i><span>Transferencia</span></label>
+                    <label class="method-option"><input type="radio" name="method" value="venta_credito"><i class="fa-solid fa-handshake" aria-hidden="true"></i><span>Fiado</span></label>
                 </fieldset>
+
+                <!-- Fiado: a quién se le fía y cuánto le queda disponible -->
+                <div id="creditSection" hidden>
+                    <div class="field">
+                        <label for="creditCustomer">Cliente</label>
+                        <select class="input" id="creditCustomer">
+                            <option value="">Elige un cliente</option>
+                        </select>
+                    </div>
+                    <p class="hint" id="creditHint" aria-live="polite"></p>
+                </div>
 
                 <div id="cashSection">
                     <div class="field">

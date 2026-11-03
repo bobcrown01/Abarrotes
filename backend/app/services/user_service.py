@@ -9,10 +9,12 @@ from app.core.exceptions import AppError, ConflictError
 from app.core.unit_of_work import UnitOfWork
 from app.models.user import User
 from app.repositories.user_repository import RoleRepository, UserRepository
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, is_pin
 from app.utils.security import hash_password
 
 logger = logging.getLogger(__name__)
+
+CASHIER_ROLE = "cajero"
 
 
 class RoleNotFoundError(AppError):
@@ -21,6 +23,14 @@ class RoleNotFoundError(AppError):
     def __init__(self) -> None:
         """Crea el error con su mensaje para el usuario."""
         super().__init__("El rol no existe")
+
+
+class PinNotAllowedError(AppError):
+    """Solo los cajeros pueden entrar con PIN."""
+
+    def __init__(self) -> None:
+        """Crea el error con su mensaje para el usuario."""
+        super().__init__("Solo los cajeros pueden usar PIN; usa una contraseña de 8 caracteres")
 
 
 class UsernameTakenError(ConflictError):
@@ -58,10 +68,15 @@ class UserService:
 
         Raises:
             RoleNotFoundError: Si el rol no existe.
+            PinNotAllowedError: Si usa PIN con un rol que no es de cajero.
             UsernameTakenError: Si el nombre de usuario ya está tomado.
         """
-        if not self._roles.exists(data.role_id):
+        role = self._roles.get(data.role_id)
+        if role is None:
             raise RoleNotFoundError()
+        # El PIN es solo para cajeros: un administrador necesita una clave completa
+        if is_pin(data.password) and role.name != CASHIER_ROLE:
+            raise PinNotAllowedError()
         if self._users.username_exists(data.username):
             raise UsernameTakenError()
 

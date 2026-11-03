@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar · Abarrotes POS</title>
+
+    <link rel="stylesheet" href="static/css/app.css">
+    <link rel="stylesheet" href="static/fontawesome/css/all.min.css">
+
+    <script type="module" src="static/js/auth/login-page.js"></script>
+</head>
+
+<body>
+    <main class="login-page">
+        <form class="card login-card" id="loginForm" novalidate>
+            <div class="brand">
+                <span class="brand-logo" aria-hidden="true"><i class="fa-solid fa-store"></i></span>
+                <span class="brand-name">Abarrotes</span>
+            </div>
+
+            <h1 id="loginTitle">Iniciar sesión</h1>
+            <p class="page-subtitle" id="loginSubtitle">Entra con tu usuario y tu contraseña o PIN.</p>
+
+            <div class="alert alert-error" id="loginError" role="alert" hidden></div>
+
+            <div class="field">
+                <label for="loginUser">Usuario</label>
+                <input class="input" id="loginUser" name="username" autocomplete="username" autocapitalize="none" maxlength="50" required>
+            </div>
+
+            <div class="field">
+                <label for="loginPassword" id="loginPasswordLabel">Contraseña o PIN</label>
+                <input class="input" id="loginPassword" name="password" type="password" autocomplete="current-password" maxlength="72" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="btnLogin">Entrar</button>
+        </form>
+    </main>
+</body>
+</html>
