@@ -4,22 +4,26 @@ import logging
 from collections.abc import Sequence
 from decimal import ROUND_HALF_UP, Decimal
 
-from app.core.exceptions import AppError, ConflictError, NotFoundError
+from app.core.exceptions import AppError, ConflictError, ForbiddenError, NotFoundError
 from app.core.unit_of_work import UnitOfWork
 from app.models.inventory_movement import InventoryMovement
 from app.models.payment import Payment
 from app.models.sale import Sale, SaleStatus
 from app.models.sale_item import SaleItem
+from app.repositories.cash_repository import CashRepository
 from app.repositories.product_repository import ProductRepository
 from app.repositories.sale_repository import CustomerRepository, SaleRepository
 from app.repositories.user_repository import UserRepository
-from app.schemas.sale import PaymentCreate, SaleCreate, SaleItemCreate
+from app.schemas.sale import PaymentCreate, SaleCreate, SaleFilters, SaleItemCreate
+from app.services.cash_service import CashClosedError
 from app.services.errors import ProductNotFoundError, UserNotFoundError
 from app.services.inventory_service import InventoryService
 
 logger = logging.getLogger(__name__)
 
 _CENT = Decimal("0.01")
+
+CREDIT_METHOD = "venta_credito"  # Fiado: el cliente lo paga después con abonos
 
 
 class SaleNotFoundError(NotFoundError):
@@ -90,6 +94,30 @@ class CustomerNotFoundError(AppError):
         super().__init__("El cliente no existe")
 
 
+class CreditRequiresCustomerError(ConflictError):
+    """Para fiar hay que indicar a quién."""
+
+    def __init__(self) -> None:
+        """Crea el error con su mensaje para el usuario."""
+        super().__init__("Para fiar hay que elegir un cliente")
+
+
+class CreditLimitExceededError(ConflictError):
+    """La deuda del cliente rebasaría su límite de fiado."""
+
+    def __init__(self) -> None:
+        """Crea el error con su mensaje para el usuario."""
+        super().__init__("La venta rebasa el límite de fiado del cliente")
+
+
+class CancelPaidForbiddenError(ForbiddenError):
+    """Solo un rol de administración puede cancelar una venta ya pagada."""
+
+    def __init__(self) -> None:
+        """Crea el error con su mensaje para el usuario."""
+        super().__init__("Solo un supervisor o administrador puede cancelar una venta pagada")
+
+
 class SaleService:
     """Ciclo de vida de una venta.
 
@@ -104,6 +132,7 @@ class SaleService:
         products: ProductRepository,
         users: UserRepository,
         customers: CustomerRepository,
+        cash: CashRepository,
         inventory: InventoryService,
         uow: UnitOfWork,
     ) -> None:
@@ -114,6 +143,7 @@ class SaleService:
             products: Repositorio de productos.
             users: Repositorio de usuarios.
             customers: Repositorio de clientes.
+            cash: Repositorio de caja, para exigir una caja abierta al cobrar.
             inventory: Servicio de inventario para descontar o regresar existencias.
             uow: Transacción de la petición.
         """
@@ -121,6 +151,7 @@ class SaleService:
         self._products = products
         self._users = users
         self._customers = customers
+        self._cash = cash
         self._inventory = inventory
         self._uow = uow
 
@@ -140,14 +171,24 @@ class SaleService:
             raise SaleNotFoundError()
         return sale
 
-    def list_sales(self, limit: int, offset: int) -> Sequence[Sale]:
-        """Regresa las ventas más recientes.
+    def list_sales(self, filters: SaleFilters) -> Sequence[Sale]:
+        """Regresa las ventas que coinciden con los filtros, las más recientes primero.
 
         Args:
-            limit: Máximo de resultados.
-            offset: Resultados a saltar.
+            filters: Estado, folio, rango de fechas y paginación.
         """
-        return self._sales.list_recent(limit, offset)
+        return self._sales.list_filtered(filters)
+
+    def summarize_sales(self, filters: SaleFilters) -> tuple[int, Decimal]:
+        """Cuenta y suma las ventas pagadas que coinciden con los filtros.
+
+        Args:
+            filters: Estado, folio y rango de fechas.
+
+        Returns:
+            Número de ventas y su total.
+        """
+        return self._sales.summarize(filters)
 
     # ---------- Operaciones ----------
 
@@ -160,7 +201,10 @@ class SaleService:
         Raises:
             UserNotFoundError: Si el usuario no existe.
             CustomerNotFoundError: Si el cliente no existe.
+            CashClosedError: Si la caja está cerrada.
         """
+        # Se avisa desde el inicio de la venta, antes de que el cajero la arme
+        self._require_open_cash()
         if not self._users.exists(data.user_id):
             raise UserNotFoundError()
         if data.customer_id is not None and not self._customers.exists(data.customer_id):
@@ -240,11 +284,18 @@ class SaleService:
             SaleNotFoundError: Si la venta no existe.
             SaleNotPendingError: Si la venta ya se cerró o canceló.
             PaymentExceedsBalanceError: Si el importe supera el saldo pendiente.
+            CashClosedError: Si cerraron la caja mientras se armaba la venta.
+            CreditRequiresCustomerError: Si es fiado y la venta no tiene cliente.
+            CreditLimitExceededError: Si el fiado rebasa el límite del cliente.
         """
+        # Sin caja abierta, este dinero no entraría en ningún corte
+        self._require_open_cash()
         sale = self._get_pending_for_update(data.sale_id)
 
         if data.amount > sale.total - sale.amount_paid:
             raise PaymentExceedsBalanceError()
+        if data.method == CREDIT_METHOD:
+            self._check_credit(sale, data.amount)
 
         change = data.received - data.amount if data.received is not None else None
         sale.payments.append(
@@ -279,30 +330,38 @@ class SaleService:
 
         sale.status = SaleStatus.PAID
         self._move_stock(sale, "salida", f"Venta {sale.folio}")
+        # La deuda nace al cerrar la venta, igual que la salida de inventario
+        self._apply_credit(sale, sign=1)
         self._uow.commit()
 
         logger.info("Venta cerrada %s total=%s", sale.folio, sale.total)
         return sale
 
-    def cancel_sale(self, sale_id: int) -> Sale:
+    def cancel_sale(self, sale_id: int, *, allow_paid: bool = True) -> Sale:
         """Cancela una venta; si ya estaba pagada, regresa el inventario.
 
         Args:
             sale_id: Id de la venta.
+            allow_paid: Si quien cancela tiene permiso para anular una venta pagada.
 
         Raises:
             SaleNotFoundError: Si la venta no existe.
             SaleNotPendingError: Si ya estaba cancelada.
+            CancelPaidForbiddenError: Si está pagada y no tiene permiso.
         """
         sale = self._sales.get(sale_id, for_update=True)
         if sale is None:
             raise SaleNotFoundError()
         if sale.status == SaleStatus.CANCELLED:
             raise SaleNotPendingError(sale.status)
+        if sale.status == SaleStatus.PAID and not allow_paid:
+            raise CancelPaidForbiddenError()
 
         # Una venta pendiente nunca descontó inventario: no hay nada que regresar
         if sale.status == SaleStatus.PAID:
             self._move_stock(sale, "entrada", f"Cancelación {sale.folio}")
+            # Si fue fiada, el cliente deja de deber esa venta
+            self._apply_credit(sale, sign=-1)
 
         sale.status = SaleStatus.CANCELLED
         self._uow.commit()
@@ -311,6 +370,44 @@ class SaleService:
         return sale
 
     # ---------- Apoyo ----------
+
+    def _require_open_cash(self) -> None:
+        """Exige una caja abierta para que todo cobro entre en un corte."""
+        if self._cash.get_open() is None:
+            raise CashClosedError()
+
+    def _check_credit(self, sale: Sale, amount: Decimal) -> None:
+        """Verifica que la venta tenga cliente y que el fiado quepa en su límite.
+
+        Args:
+            sale: Venta que se está cobrando.
+            amount: Importe que se quiere fiar.
+
+        Raises:
+            CreditRequiresCustomerError: Si la venta no tiene cliente.
+            CreditLimitExceededError: Si la deuda rebasaría el límite.
+        """
+        customer = None
+        if sale.customer_id is not None:
+            customer = self._customers.get(sale.customer_id, for_update=True)
+        if customer is None:
+            raise CreditRequiresCustomerError()
+        if customer.balance + amount > customer.credit_limit:
+            raise CreditLimitExceededError()
+
+    def _apply_credit(self, sale: Sale, *, sign: int) -> None:
+        """Suma o resta a la deuda del cliente lo fiado en esta venta.
+
+        Args:
+            sale: Venta que se cierra o se cancela.
+            sign: 1 para sumar la deuda, -1 para quitarla.
+        """
+        credit = sum((p.amount for p in sale.payments if p.method == CREDIT_METHOD), Decimal("0"))
+        if not credit or sale.customer_id is None:
+            return
+        customer = self._customers.get(sale.customer_id, for_update=True)
+        if customer is not None:
+            customer.balance += sign * credit
 
     def _get_pending_for_update(self, sale_id: int) -> Sale:
         """Regresa una venta pendiente con la fila bloqueada."""

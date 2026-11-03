@@ -10,6 +10,7 @@ import { addPayment, addSaleItem, cancelSale, closeSale, createSale } from "../l
  * @typedef {Object} PaymentChoice
  * @property {PaymentMethod} method
  * @property {number|null} received Efectivo entregado (solo para efectivo).
+ * @property {number|null} [customerId] Cliente al que se le fía (solo para fiado).
  */
 
 /**
@@ -25,7 +26,7 @@ import { addPayment, addSaleItem, cancelSale, closeSale, createSale } from "../l
  * @returns {Promise<Sale>} La venta cerrada.
  */
 export async function checkout(cart, userId, payment) {
-    const sale = await createSale(userId);
+    const sale = await createSale(userId, payment.customerId ?? null);
 
     try {
         let current = sale;

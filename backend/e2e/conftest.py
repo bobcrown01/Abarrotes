@@ -20,6 +20,23 @@ def base_url() -> str:
     return os.environ.get("E2E_BASE_URL", DEFAULT_BASE_URL)
 
 
+@pytest.fixture(autouse=True)
+def session(page: Page, base_url: str) -> None:
+    """Abre sesión antes de cada prueba; la cookie queda en el navegador de ``page``.
+
+    Si el sistema aún no tiene administrador, lo crea con esas mismas credenciales.
+    Se definen con ``E2E_USER`` y ``E2E_PASSWORD``.
+    """
+    credentials = {
+        "username": os.environ.get("E2E_USER", "e2e_admin"),
+        "password": os.environ.get("E2E_PASSWORD", "e2e-clave-larga"),
+    }
+    status = page.request.get(f"{base_url}/api/auth/status").json()
+    path = "setup" if status["needs_setup"] else "login"
+    response = page.request.post(f"{base_url}/api/auth/{path}", data=credentials)
+    assert response.ok, f"No se pudo abrir sesión: {response.status} {response.text()}"
+
+
 @pytest.fixture
 def page_errors(page: Page) -> Iterator[list[str]]:
     """Acumula errores JS y respuestas 4xx/5xx de la API durante la prueba."""

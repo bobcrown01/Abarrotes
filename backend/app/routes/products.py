@@ -13,7 +13,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query, status
 
 from app.models.products import Category, Product
-from app.routes.dependencies import ProductServiceDep
+from app.routes.dependencies import LOGIN_REQUIRED, MANAGER_REQUIRED, ProductServiceDep
 from app.schemas.product import (
     CategoryOut,
     ProductCreate,
@@ -22,7 +22,8 @@ from app.schemas.product import (
     ProductUpdate,
 )
 
-router = APIRouter(tags=["productos"])
+# Leer el catálogo requiere sesión; cambiarlo, un rol de administración
+router = APIRouter(tags=["productos"], dependencies=[LOGIN_REQUIRED])
 
 
 @router.get("/categories", response_model=list[CategoryOut])
@@ -31,7 +32,12 @@ def list_categories(service: ProductServiceDep) -> Sequence[Category]:
     return service.list_categories()
 
 
-@router.post("/products", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/products",
+    response_model=ProductOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[MANAGER_REQUIRED],
+)
 def create_product(data: ProductCreate, service: ProductServiceDep) -> Product:
     """Da de alta un producto.
 
@@ -72,7 +78,7 @@ def get_product(product_id: int, service: ProductServiceDep) -> Product:
     return service.get_product(product_id)
 
 
-@router.put("/products/{product_id}", response_model=ProductOut)
+@router.put("/products/{product_id}", response_model=ProductOut, dependencies=[MANAGER_REQUIRED])
 def update_product(product_id: int, data: ProductUpdate, service: ProductServiceDep) -> Product:
     """Actualiza solo los campos enviados.
 
@@ -82,13 +88,21 @@ def update_product(product_id: int, data: ProductUpdate, service: ProductService
     return service.update_product(product_id, data)
 
 
-@router.post("/products/{product_id}/deactivate", response_model=ProductOut)
+@router.post(
+    "/products/{product_id}/deactivate",
+    response_model=ProductOut,
+    dependencies=[MANAGER_REQUIRED],
+)
 def deactivate_product(product_id: int, service: ProductServiceDep) -> Product:
     """Desactiva el producto (deja de venderse pero conserva su historial)."""
     return service.deactivate_product(product_id)
 
 
-@router.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/products/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[MANAGER_REQUIRED],
+)
 def delete_product(product_id: int, service: ProductServiceDep) -> None:
     """Elimina un producto que nunca se ha usado.
 

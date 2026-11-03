@@ -45,8 +45,9 @@ def test_open_sale_assigns_sequential_folio(db_client):
     assert first["status"] == "pendiente"
 
 
-def test_open_sale_with_unknown_user_or_customer_returns_400(db_client):
-    assert db_client.post("/api/sales", json={"user_id": 999}).status_code == 400
+def test_open_sale_ignores_requested_user_and_rejects_unknown_customer(db_client):
+    # El usuario sale de la sesión: el que venga en la petición no cuenta
+    assert db_client.post("/api/sales", json={"user_id": 999}).json()["user_id"] == 1
     response = db_client.post("/api/sales", json={"user_id": 1, "customer_id": 999})
     assert response.status_code == 400
     assert response.json()["detail"] == "El cliente no existe"

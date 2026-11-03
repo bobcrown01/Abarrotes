@@ -1,9 +1,11 @@
 /** Pantalla de venta: catálogo, carrito y cobro. */
 
-import { ApiError, getCategories, getProducts, getUsers } from "../lib/api.js";
+import { ApiError, getCategories, getCurrentCash, getCustomers, getProducts } from "../lib/api.js";
 import { escapeHtml, formatMoney } from "../lib/format.js";
 import { enableImageFallback, productAvatar } from "../lib/product-image.js";
+import { getSession } from "../lib/session.js";
 import { renderSidebar } from "../lib/sidebar.js";
+import { printTicket } from "../lib/ticket.js";
 import { showToast } from "../lib/toast.js";
 import { allowsFraction, Cart, lineCents } from "./cart.js";
 import { checkout } from "./checkout.js";
@@ -12,10 +14,17 @@ import { setupPaymentDialog } from "./payment-dialog.js";
 /** @typedef {import("../lib/api.js").Product} Product */
 /** @typedef {import("../lib/api.js").Category} Category */
 
-const CASHIER_KEY = "pos.cashierId";
-
 /** @type {{ products: Product[], categories: Category[], categoryId: number|null }} */
 const state = { products: [], categories: [], categoryId: null };
+
+/** Id del cajero con sesión abierta; hasta conocerlo no se puede cobrar. */
+let cashierId = 0;
+
+/** Si la caja está abierta; cerrada no se puede cobrar (el backend también lo exige). */
+let cashOpen = false;
+
+/** @type {import("../lib/api.js").Sale|null} Última venta cobrada, para imprimir su ticket. */
+let lastSale = null;
 const cart = new Cart();
 
 const el = {
@@ -23,7 +32,9 @@ const el = {
     chips: /** @type {HTMLElement} */ (document.getElementById("categoryChips")),
     grid: /** @type {HTMLElement} */ (document.getElementById("productGrid")),
     gridEmpty: /** @type {HTMLElement} */ (document.getElementById("gridEmpty")),
-    cashier: /** @type {HTMLSelectElement} */ (document.getElementById("cashierSelect")),
+    cashier: /** @type {HTMLElement} */ (document.getElementById("cashierName")),
+    cashNotice: /** @type {HTMLElement} */ (document.getElementById("cashClosedNotice")),
+    printLast: /** @type {HTMLButtonElement} */ (document.getElementById("btnPrintLast")),
     lines: /** @type {HTMLElement} */ (document.getElementById("cartLines")),
     cartEmpty: /** @type {HTMLElement} */ (document.getElementById("cartEmpty")),
     count: /** @type {HTMLElement} */ (document.getElementById("cartCount")),
@@ -31,24 +42,6 @@ const el = {
     charge: /** @type {HTMLButtonElement} */ (document.getElementById("btnCharge")),
     clear: /** @type {HTMLButtonElement} */ (document.getElementById("btnClearCart")),
 };
-
-// ---------- Preferencias locales (solo comodidad; si fallan no pasa nada) ----------
-
-function loadCashierId() {
-    try {
-        return Number(localStorage.getItem(CASHIER_KEY)) || null;
-    } catch {
-        return null;
-    }
-}
-
-function saveCashierId(id) {
-    try {
-        localStorage.setItem(CASHIER_KEY, String(id));
-    } catch {
-        // Navegación privada o almacenamiento bloqueado: se vuelve a elegir
-    }
-}
 
 // ---------- Catálogo ----------
 
@@ -117,7 +110,7 @@ function renderCart() {
     el.count.textContent = `${count} artículo${count === 1 ? "" : "s"}`;
     el.total.textContent = formatMoney(cart.total);
     el.charge.textContent = cart.isEmpty ? "Cobrar" : `Cobrar ${formatMoney(cart.total)}`;
-    el.charge.disabled = cart.isEmpty || !el.cashier.value;
+    el.charge.disabled = cart.isEmpty || !cashierId || !cashOpen;
     el.clear.disabled = cart.isEmpty;
 }
 
@@ -170,18 +163,34 @@ async function loadCatalog() {
     }
 }
 
-async function loadCashiers() {
+/** La venta queda a nombre de quien inició sesión. */
+async function loadCashier() {
     try {
-        const users = (await getUsers()).filter(u => u.is_active);
-        const placeholder = users.length ? "Elige cajero" : "No hay cajeros registrados";
-        el.cashier.innerHTML = `<option value="">${placeholder}</option>`
-            + users.map(u => `<option value="${u.id}">${escapeHtml(u.username)}</option>`).join("");
-
-        const saved = loadCashierId();
-        if (saved && users.some(u => u.id === saved)) el.cashier.value = String(saved);
-        else if (users.length === 1) el.cashier.value = String(users[0].id);
+        const user = await getSession();
+        cashierId = user.id;
+        el.cashier.textContent = user.username;
     } catch (err) {
-        reportError(err, "No se pudieron cargar los cajeros");
+        reportError(err, "No se pudo consultar la sesión");
+    }
+    renderCart();
+}
+
+/** Carga los clientes para la opción de fiado; si falla, lo demás se puede cobrar igual. */
+async function loadCustomers() {
+    try {
+        payment.setCustomers(await getCustomers());
+    } catch (err) {
+        reportError(err, "No se pudieron cargar los clientes");
+    }
+}
+
+/** Consulta si la caja está abierta y avisa si hace falta abrirla. */
+async function loadCashState() {
+    try {
+        cashOpen = (await getCurrentCash()).session !== null;
+        el.cashNotice.hidden = cashOpen;
+    } catch (err) {
+        reportError(err, "No se pudo consultar la caja");
     }
     renderCart();
 }
@@ -190,9 +199,14 @@ async function loadCashiers() {
 
 const payment = setupPaymentDialog({
     onConfirm: async choice => {
-        const sale = await checkout(cart, Number(el.cashier.value), choice);
+        const sale = await checkout(cart, cashierId, choice);
         const change = sale.payments[0]?.change;
+        // Se guarda la última venta y los nombres, porque el carrito se vacía enseguida
+        lastSale = sale;
+        el.printLast.hidden = false;
         cart.clear();
+        // Si fue a fiado, la deuda del cliente cambió: se recarga su crédito disponible
+        if (choice.customerId) loadCustomers();
         showToast(`Venta ${sale.folio} registrada${change ? ` · Cambio ${formatMoney(change)}` : ""}`);
         el.search.focus();
     },
@@ -234,9 +248,10 @@ el.lines.addEventListener("change", e => {
     if (input.dataset.qty) cart.setQty(Number(input.dataset.qty), parseFloat(input.value) || 0);
 });
 
-el.cashier.addEventListener("change", () => {
-    if (el.cashier.value) saveCashierId(Number(el.cashier.value));
-    renderCart();
+// Imprime el ticket de la última venta con los nombres del catálogo ya cargado
+el.printLast.addEventListener("click", () => {
+    if (!lastSale) return;
+    printTicket(lastSale, new Map(state.products.map(p => [p.id, p.name])), el.cashier.textContent ?? "");
 });
 
 el.clear.addEventListener("click", () => cart.clear());
@@ -254,9 +269,17 @@ document.addEventListener("keydown", e => {
     }
 });
 
+// El carrito vive en memoria: avisa antes de perder una venta en curso al
+// cambiar de pantalla desde el menú
+window.addEventListener("beforeunload", e => {
+    if (!cart.isEmpty) e.preventDefault();
+});
+
 cart.subscribe(renderCart);
 enableImageFallback(el.grid);
 renderSidebar("index.html");
 loadCatalog();
-loadCashiers();
+loadCashier();
+loadCashState();
+loadCustomers();
 el.search.focus();

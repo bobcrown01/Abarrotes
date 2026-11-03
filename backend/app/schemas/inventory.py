@@ -40,6 +40,14 @@ class InventoryMovementCreate(BaseModel):
         return self
 
 
+class MinStockUpdate(BaseModel):
+    """Existencias desde las que un producto se marca "Por surtir"."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    min_stock: Quantity
+
+
 class InventoryMovementOut(BaseModel):
     """Movimiento registrado junto con las existencias resultantes."""
 

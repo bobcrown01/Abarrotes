@@ -45,6 +45,20 @@ class ConflictError(AppError):
     status_code = status.HTTP_409_CONFLICT
 
 
+class ForbiddenError(AppError):
+    """El usuario no tiene permiso para esta operación."""
+
+    status_code = status.HTTP_403_FORBIDDEN
+
+    def __init__(self, detail: str = "Tu usuario no tiene permiso para esta operación") -> None:
+        """Crea el error.
+
+        Args:
+            detail: Mensaje legible para el usuario final.
+        """
+        super().__init__(detail)
+
+
 async def _app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     """Convierte un :class:`AppError` en una respuesta JSON y lo registra."""
     logger.info(

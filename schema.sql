@@ -143,6 +143,40 @@ CREATE TABLE users (
     is_active      BOOLEAN DEFAULT TRUE
 );
 
+-- Sesiones de login: solo se guarda el hash del token de la cookie
+CREATE TABLE user_sessions (
+    token_hash  VARCHAR(64) PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at  TIMESTAMP NOT NULL
+);
+
+-- Abonos de clientes a su cuenta de fiado
+CREATE TABLE customer_payments (
+    id           SERIAL PRIMARY KEY,
+    customer_id  INTEGER NOT NULL REFERENCES customers(id),
+    amount       NUMERIC(12,2) NOT NULL,
+    method       VARCHAR(30) NOT NULL,
+    user_id      INTEGER REFERENCES users(id),
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Turnos de caja: del fondo inicial al corte
+CREATE TABLE cash_sessions (
+    id              SERIAL PRIMARY KEY,
+    opened_by       INTEGER REFERENCES users(id),
+    opened_at       TIMESTAMP NOT NULL DEFAULT NOW(),
+    opening_amount  NUMERIC(12,2) NOT NULL,
+    closed_by       INTEGER REFERENCES users(id),
+    closed_at       TIMESTAMP,
+    counted_amount  NUMERIC(12,2),
+    expected_cash   NUMERIC(12,2),
+    sales_total     NUMERIC(12,2),
+    notes           VARCHAR(200)
+);
+
+-- Solo puede haber una caja abierta
+CREATE UNIQUE INDEX cash_sessions_one_open ON cash_sessions ((closed_at IS NULL)) WHERE closed_at IS NULL;
+
 ALTER TABLE inventory_movements
     ADD CONSTRAINT inventory_movements_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id);
 

@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.schemas.common import DecimalOut, Money, PositiveMoney, Quantity
+from app.schemas.common import DateRangeFilters, DecimalOut, Money, PositiveMoney, Quantity
 
 PaymentMethod = Literal[
     "efectivo",
@@ -24,7 +24,8 @@ class SaleCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     customer_id: int | None = Field(default=None, gt=0)
-    user_id: int = Field(gt=0)
+    # La ruta lo reemplaza por el usuario de la sesión
+    user_id: int | None = Field(default=None, gt=0)
 
 
 class SaleItemCreate(BaseModel):
@@ -69,6 +70,22 @@ class PaymentCreate(BaseModel):
         if self.received is not None and self.received < self.amount:
             raise ValueError("Lo recibido no puede ser menor que el importe del pago")
         return self
+
+
+class SaleFilters(DateRangeFilters):
+    """Filtros de ``GET /sales`` y ``GET /sales/summary``."""
+
+    status: Literal["pendiente", "pagada", "cancelada"] | None = None
+    folio: str | None = Field(default=None, max_length=50)
+    limit: int = Field(default=50, ge=1, le=100)
+    offset: int = Field(default=0, ge=0)
+
+
+class SalesSummaryOut(BaseModel):
+    """Totales de las ventas pagadas que coinciden con los filtros."""
+
+    count: int
+    total: DecimalOut
 
 
 class SaleItemOut(BaseModel):

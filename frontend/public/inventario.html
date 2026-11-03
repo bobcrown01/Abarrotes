@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario · Abarrotes POS</title>
+
+    <link rel="stylesheet" href="static/css/app.css">
+    <link rel="stylesheet" href="static/css/pos.css">
+    <link rel="stylesheet" href="static/fontawesome/css/all.min.css">
+
+    <script type="module" src="static/js/inventory/inventory-page.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+
+    <aside class="app-sidebar" id="appSidebar"></aside>
+
+    <main class="app-main" id="main">
+
+        <header class="page-header">
+            <div>
+                <h1>Inventario</h1>
+                <p class="page-subtitle" id="stockSummary" aria-live="polite">Cargando…</p>
+            </div>
+        </header>
+
+        <div class="chip-row view-switch" role="group" aria-label="Vista de inventario">
+            <button type="button" class="chip" id="viewStock" aria-pressed="true">Existencias</button>
+            <button type="button" class="chip" id="viewMovements" aria-pressed="false">Movimientos</button>
+        </div>
+
+        <!-- Existencias -->
+        <section class="card" id="stockPanel" aria-labelledby="stockTitle">
+            <h2 class="visually-hidden" id="stockTitle">Existencias</h2>
+
+            <div class="toolbar" role="search">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <label class="visually-hidden" for="stockSearch">Buscar productos</label>
+                    <input type="search" id="stockSearch" placeholder="Buscar por nombre, código o SKU" autocomplete="off">
+                </div>
+                <label class="visually-hidden" for="stockCategory">Filtrar por categoría</label>
+                <select id="stockCategory" class="input select-filter">
+                    <option value="">Todas las categorías</option>
+                </select>
+                <label class="visually-hidden" for="stockLevel">Filtrar por estado</label>
+                <select id="stockLevel" class="input select-filter">
+                    <option value="">Todos los estados</option>
+                    <option value="bajo">Por surtir</option>
+                    <option value="agotado">Agotados</option>
+                    <option value="ok">Disponibles</option>
+                    <option value="sin_control">Sin control</option>
+                </select>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table" id="stockTable" aria-busy="true">
+                    <caption class="visually-hidden">Existencias por producto</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Producto</th>
+                            <th scope="col" class="num">Existencias</th>
+                            <th scope="col" class="num">Mínimo</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockRows"></tbody>
+                </table>
+                <div class="empty-state" id="stockEmpty" hidden>
+                    <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+                    <p></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Movimientos -->
+        <section class="card" id="movementsPanel" aria-labelledby="movementsTitle" hidden>
+            <h2 class="visually-hidden" id="movementsTitle">Movimientos</h2>
+
+            <div class="toolbar">
+                <label class="visually-hidden" for="movementType">Filtrar por tipo</label>
+                <select id="movementType" class="input select-filter">
+                    <option value="">Todos los tipos</option>
+                    <option value="entrada">Entradas</option>
+                    <option value="salida">Salidas</option>
+                    <option value="ajuste">Ajustes</option>
+                </select>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table" id="movementsTable">
+                    <caption class="visually-hidden">Historial de movimientos</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col" class="num">Cantidad</th>
+                            <th scope="col">Motivo</th>
+                            <th scope="col">Usuario</th>
+                        </tr>
+                    </thead>
+                    <tbody id="movementRows"></tbody>
+                </table>
+                <div class="empty-state" id="movementsEmpty" hidden>
+                    <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                    <p></p>
+                </div>
+            </div>
+
+            <nav class="pager" id="movementsPager" aria-label="Páginas de movimientos" hidden></nav>
+        </section>
+
+    </main>
+
+    <!-- Definir el mínimo de existencias -->
+    <dialog class="app-dialog" id="minStockDialog" aria-labelledby="minStockTitle">
+        <form id="minStockForm" novalidate>
+            <header class="dialog-header">
+                <h2 id="minStockTitle">Mínimo de existencias</h2>
+                <button type="button" class="icon-btn" id="btnCloseMinStock" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </header>
+            <div class="dialog-body">
+                <p class="dialog-message"><strong id="minStockProduct"></strong></p>
+                <div class="field">
+                    <label for="minStockValue">Marcar "Por surtir" cuando queden</label>
+                    <input class="input input-lg" id="minStockValue" type="number" min="0" inputmode="decimal" aria-describedby="minStockHint">
+                </div>
+                <p class="hint" id="minStockHint"></p>
+                <div class="alert alert-error" id="minStockError" role="alert" hidden></div>
+            </div>
+            <footer class="dialog-footer dialog-actions">
+                <button type="button" class="btn btn-ghost" id="btnCancelMinStock">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btnSaveMinStock">Guardar</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <!-- Registrar movimiento -->
+    <dialog class="app-dialog" id="movementDialog" aria-labelledby="movementDialogTitle">
+        <form id="movementForm" novalidate>
+            <header class="dialog-header">
+                <h2 id="movementDialogTitle">Registrar movimiento</h2>
+                <button type="button" class="icon-btn" id="btnCloseMovement" aria-label="Cerrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </header>
+
+            <div class="dialog-body">
+                <p class="dialog-message"><strong id="movementProduct"></strong></p>
+                <p class="hint" id="movementCurrent"></p>
+
+                <fieldset class="move-types">
+                    <legend class="section-title">Tipo de movimiento</legend>
+                    <label class="move-type"><input type="radio" name="type" value="entrada" checked><i class="fa-solid fa-arrow-down" aria-hidden="true"></i><span>Entrada</span></label>
+                    <label class="move-type"><input type="radio" name="type" value="salida"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i><span>Salida</span></label>
+                    <label class="move-type"><input type="radio" name="type" value="ajuste"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i><span>Conteo</span></label>
+                </fieldset>
+
+                <div class="field">
+                    <label for="movementQuantity" id="movementQuantityLabel">Cantidad que entra</label>
+                    <input class="input input-lg" id="movementQuantity" name="quantity" type="number" min="0" inputmode="decimal" required aria-describedby="movementHint">
+                </div>
+                <p class="hint" id="movementHint" aria-live="polite"></p>
+
+                <div class="field">
+                    <label for="movementReason">Motivo (opcional)</label>
+                    <input class="input" id="movementReason" name="reason" maxlength="100" placeholder="Ej. Compra a proveedor">
+                </div>
+
+                <div class="alert alert-error" id="movementError" role="alert" hidden></div>
+            </div>
+
+            <footer class="dialog-footer dialog-actions">
+                <button type="button" class="btn btn-ghost" id="btnCancelMovement">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btnSaveMovement">Guardar</button>
+            </footer>
+        </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

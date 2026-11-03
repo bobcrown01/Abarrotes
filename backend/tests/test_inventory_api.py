@@ -40,11 +40,34 @@ def test_unknown_product_returns_404(db_client):
     assert move(db_client, "entrada", 1, product_id=999).status_code == 404
 
 
-def test_unknown_user_returns_400(db_client):
+def test_min_stock_starts_control_when_product_had_none(db_client):
+    response = db_client.put("/api/inventory/1/min-stock", json={"min_stock": 5})
+
+    assert response.status_code == 200
+    assert response.json()["min_stock"] == 5
+    assert response.json()["quantity"] == 0
+
+
+def test_min_stock_keeps_existing_quantity(db_client):
+    move(db_client, "entrada", 8)
+
+    body = db_client.put("/api/inventory/1/min-stock", json={"min_stock": 3}).json()
+
+    assert body["quantity"] == 8
+    assert body["min_stock"] == 3
+
+
+def test_min_stock_validates_product_and_value(db_client):
+    assert db_client.put("/api/inventory/999/min-stock", json={"min_stock": 1}).status_code == 404
+    assert db_client.put("/api/inventory/1/min-stock", json={"min_stock": -1}).status_code == 422
+
+
+def test_movement_is_recorded_for_session_user(db_client):
+    # El responsable sale de la sesión: el que venga en la petición no cuenta
     response = move(db_client, "entrada", 1, user_id=999)
 
-    assert response.status_code == 400
-    assert response.json()["detail"] == "El usuario no existe"
+    assert response.status_code == 201
+    assert response.json()["user_id"] == 1
 
 
 @pytest.mark.parametrize(

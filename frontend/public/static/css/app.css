@@ -17,8 +17,10 @@
     --success-soft: #e3f6ec;
     --danger: #b42318;
     --danger-soft: #fdecec;
+    --warning: #8a4b00;      /* 5.4:1 sobre --warning-soft */
+    --warning-soft: #fdf0d9;
     --radius: 10px;
-    --sidebar-w: 64px;
+    --sidebar-w: 0px;
 
     /* Fondos de avatar por categoría (texto oscuro encima, contraste AA) */
     --tile-0: #e8e5fd;
@@ -32,6 +34,9 @@
 }
 
 * { box-sizing: border-box; }
+
+/* Clases como .btn fijan display y anularían el atributo hidden */
+[hidden] { display: none !important; }
 
 body {
     margin: 0;
@@ -69,23 +74,36 @@ body {
 
 .skip-link:focus { top: 8px; }
 
-/* ---------- Sidebar (solo iconos en móvil) ---------- */
+/*
+ * ---------- Menú ----------
+ * Teléfono: barra inferior con las pantallas disponibles, al alcance del pulgar.
+ * Desde 560px (incluye la pantalla de 7"): riel con icono y texto pequeño.
+ * Desde 900px: menú completo agrupado.
+ */
 
 .app-sidebar {
     position: fixed;
-    inset: 0 auto 0 0;
-    width: var(--sidebar-w);
-    padding: 18px 8px;
+    inset: auto 0 0 0;
+    z-index: 5;
     background: var(--surface);
-    border-right: 1px solid var(--border);
+    border-top: 1px solid var(--border);
 }
 
+.brand,
+.nav-status,
+.nav-group-title,
+.nav-kbd { display: none; }
+
+/* Con más pantallas, la barra del teléfono se desliza de lado en vez de apretarse */
+.nav-list { display: flex; overflow-x: auto; scrollbar-width: none; }
+.nav-list .nav-item { min-width: 64px; }
+.nav-group { display: contents; }
+
 .brand {
-    display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding-bottom: 20px;
+    padding-bottom: 12px;
     font-weight: 700;
     font-size: 17px;
 }
@@ -100,31 +118,63 @@ body {
     color: #fff;
 }
 
-.brand-name,
-.nav-item span { display: none; }
+.brand-name { display: none; }
 
 .nav-item {
+    flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 10px 12px;
-    margin-bottom: 2px;
+    gap: 3px;
+    min-height: 56px;
+    padding: 6px 2px;
     border-radius: 8px;
     color: var(--text-muted);
     text-decoration: none;
-    font-weight: 500;
+    font-size: 11px;
+    font-weight: 600;
 }
 
-.nav-item i { width: 18px; text-align: center; }
-.nav-item:hover { background: var(--bg); color: var(--text); }
-.nav-item[aria-current="page"] { background: var(--primary-soft); color: var(--primary); }
+.nav-item i { width: 18px; font-size: 16px; text-align: center; }
+a.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item[aria-current="page"],
+a.nav-item[aria-current="page"]:hover { background: var(--primary-soft); color: var(--primary); }
+.nav-item-soon { display: none; opacity: .6; cursor: not-allowed; }
+.nav-soon { display: none; }
+
+/* Quién tiene la sesión: en teléfono se cierra con el botón "Salir" de la barra */
+.nav-user { display: none; align-items: center; justify-content: space-between; gap: 4px; }
+.nav-user-name { overflow: hidden; font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.nav-logout-phone { border: none; background: none; font-family: inherit; cursor: pointer; }
+
+/* Lo que solo usa un rol de administración aparece hasta confirmar la sesión */
+html:not([data-can-manage]) .manager-only { display: none !important; }
+
+.nav-status {
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.nav-status-dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+}
+
+.nav-status.is-offline { color: var(--danger); }
+.nav-status.is-offline .nav-status-dot { background: var(--danger); }
 
 /* ---------- Layout ---------- */
 
 .app-main {
     margin-left: var(--sidebar-w);
-    padding: 20px 16px;
+    padding: 20px 16px 76px; /* Abajo deja libre la barra de navegación */
 }
 
 .page-header {
@@ -176,7 +226,8 @@ body {
 
 /* ---------- Tabla (scroll horizontal en móvil) ---------- */
 
-.table-wrap { overflow-x: auto; }
+/* position: el texto .visually-hidden (absoluto) queda dentro del scroll de la tabla */
+.table-wrap { position: relative; overflow-x: auto; }
 
 .data-table {
     width: 100%;
@@ -218,6 +269,8 @@ body {
 
 .badge-success { background: var(--success-soft); color: var(--success); }
 .badge-muted { background: var(--bg); color: var(--text-muted); }
+.badge-warning { background: var(--warning-soft); color: var(--warning); }
+.badge-danger { background: var(--danger-soft); color: var(--danger); }
 
 .empty-state {
     padding: 48px 16px;
@@ -444,6 +497,7 @@ fieldset {
     left: 50%;
     transform: translateX(-50%);
     max-width: calc(100% - 32px);
+    margin-bottom: 56px; /* Por encima de la barra de navegación */
     padding: 12px 20px;
     border-radius: 8px;
     background: var(--text);
@@ -540,23 +594,281 @@ fieldset {
     gap: 10px;
 }
 
+/* ---------- Pantallas de consulta (Ventas e Inventario) ---------- */
+
+.view-switch {
+    margin-bottom: 14px;
+}
+
+.data-table .btn-small {
+    padding: 6px 12px;
+    white-space: nowrap;
+}
+
+.pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 16px;
+    color: var(--text-muted);
+}
+
+.pager .btn { padding: 6px 12px; }
+.btn-ghost:disabled { cursor: not-allowed; }
+
+.detail-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 0 0 18px;
+}
+
+.detail-meta dt { color: var(--text-muted); font-size: 12px; }
+.detail-meta dd { margin: 2px 0 0; font-weight: 600; }
+
+.detail-table { margin-bottom: 18px; }
+.detail-table th,
+.detail-table td { padding: 8px 6px; white-space: normal; }
+
+.detail-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 18px;
+    font-weight: 600;
+}
+
+.detail-total strong { font-size: 22px; }
+
+.sale-dialog { width: min(560px, calc(100% - 24px)); }
+
+.move-types {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.move-types legend { grid-column: 1 / -1; }
+
+.move-type {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 4px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.move-type input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.move-type:has(input:checked) {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.move-type:has(input:focus-visible) { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ---------- Ticket impreso ---------- */
+
+#printTicket { display: none; }
+
+@media print {
+    /* Sin márgenes de página: el rollo de la impresora de tickets es angosto */
+    @page { margin: 0; }
+
+    body { background: #fff; color: #000; }
+    body > *:not(#printTicket) { display: none !important; }
+
+    #printTicket {
+        display: block;
+        width: 100%;
+        max-width: 80mm;
+        padding: 2mm;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.3;
+    }
+
+    #printTicket p { margin: 0 0 2px; }
+    #printTicket table { width: 100%; margin-top: 6px; border-collapse: collapse; }
+    #printTicket .ticket-center { text-align: center; }
+    #printTicket .ticket-num { text-align: right; white-space: nowrap; }
+    /* "ticket-sum" y no "ticket-total": ese nombre ya lo usa el ticket en pantalla (pos.css) */
+    #printTicket .ticket-sum { border-top: 1px dashed #000; border-bottom: 1px dashed #000; }
+}
+
+/* ---------- Filtros con etiqueta visible (fechas, estado, folio) ---------- */
+
+.filter-field { display: flex; flex-direction: column; gap: 4px; }
+.filter-field label { color: var(--text-muted); font-size: 12px; font-weight: 600; }
+
+/* ---------- Reportes: cifras grandes y tablas ---------- */
+
+.report-filters { margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.report-presets { margin: 0; align-self: flex-end; }
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat-grid[aria-busy="true"] { opacity: .5; }
+.stat-tile { display: flex; flex-direction: column; gap: 6px; padding: 16px; }
+.stat-label { color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.stat-value { font-size: 24px; font-variant-numeric: tabular-nums; }
+.report-tables { display: grid; gap: 16px; }
+.report-more { margin: 0; padding: 12px 16px; }
+.alert-warning { background: var(--warning-soft); color: var(--warning); }
+
+/* ---------- Abonos de clientes ---------- */
+
+.abono-history { max-height: 140px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.abono-history li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.abono-history .muted { color: var(--text-muted); }
+
+/* ---------- Corte de caja ---------- */
+
+.cash-panels { display: grid; gap: 16px; margin-bottom: 16px; }
+.cash-card { padding: 20px; }
+.cash-card h2 { margin: 0 0 14px; font-size: 18px; }
+.cash-history-title { margin: 0; padding: 16px; font-size: 16px; border-bottom: 1px solid var(--border); }
+
+/* ---------- Pantalla de inicio de sesión ---------- */
+
+.login-page {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    padding: 16px;
+}
+
+.login-card { width: min(380px, 100%); padding: 24px; }
+.login-card .brand { display: flex; justify-content: flex-start; padding-bottom: 8px; }
+.login-card .brand-name { display: inline; }
+.login-card h1 { margin: 8px 0 4px; font-size: 20px; }
+.login-card .btn { justify-content: center; width: 100%; }
+
 /* ---------- Tablet y escritorio ---------- */
 
 @media (min-width: 560px) {
+    :root { --sidebar-w: 76px; }
+
     .toolbar { flex-direction: row; }
+    .toolbar-wrap { flex-wrap: wrap; align-items: flex-end; }
     .select-filter { width: 220px; }
     .field-row { flex-direction: row; gap: 12px; }
     .drawer { width: 440px; }
+
+    .app-main { padding-bottom: 20px; }
+    .toast { margin-bottom: 0; }
+
+    .app-sidebar {
+        inset: 0 auto 0 0;
+        display: flex;
+        flex-direction: column;
+        width: var(--sidebar-w);
+        padding: 10px 3px;
+        border-top: none;
+        border-right: 1px solid var(--border);
+    }
+
+    .brand { display: flex; }
+
+    /* Una pantalla de 7" (480px de alto) puede no alcanzar: el menú hace scroll */
+    .nav-list {
+        flex: 1;
+        flex-direction: column;
+        min-height: 0;
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+
+    .nav-group { display: block; }
+    .nav-group + .nav-group { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border); }
+    .nav-item { min-height: 44px; padding: 5px 2px; font-size: 10px; text-align: center; }
+    .nav-item-soon { display: flex; }
+    .nav-logout-phone { display: none; }
+
+    .nav-user { display: flex; flex-direction: column; padding-top: 6px; text-align: center; }
+    .nav-user-name { max-width: 100%; font-size: 10px; }
+    .nav-user .icon-btn { height: 28px; font-size: 14px; }
+
+    .nav-status {
+        display: flex;
+        justify-content: center;
+        padding-top: 8px;
+        font-size: 10px;
+        text-align: center;
+    }
 }
 
 @media (min-width: 900px) {
     :root { --sidebar-w: 220px; }
 
     .app-sidebar { padding: 18px 12px; }
-    .brand { justify-content: flex-start; padding: 0 8px 20px; }
-    .brand-name,
-    .nav-item span { display: inline; }
-    .nav-item { justify-content: flex-start; }
+    .brand { justify-content: flex-start; padding: 0 8px 16px; }
+    .brand-name { display: inline; }
+
+    .nav-group + .nav-group { margin-top: 10px; padding-top: 0; border-top: none; }
+
+    .nav-group-title {
+        display: block;
+        margin: 0 0 4px;
+        padding: 0 12px;
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+
+    .nav-item {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 12px;
+        min-height: 40px;
+        margin-bottom: 2px;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: left;
+    }
+
+    .nav-label { flex: 1; }
+
+    .nav-kbd {
+        display: inline;
+        padding: 0 5px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 11px;
+    }
+
+    .nav-soon {
+        display: inline;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: var(--bg);
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    .cash-panels { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items: start; }
+    .stat-grid { grid-template-columns: repeat(4, 1fr); }
+    .report-tables { grid-template-columns: 3fr 2fr; align-items: start; }
+
+    .nav-user { flex-direction: row; padding: 8px 4px 0 12px; text-align: left; }
+    .nav-user-name { font-size: 13px; }
+
+    .nav-status { justify-content: flex-start; padding: 8px 12px 0; font-size: 12px; }
+
     .app-main { padding: 28px 32px; }
     .page-header h1 { font-size: 24px; }
 }

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corte de caja · Abarrotes POS</title>
+
+    <link rel="stylesheet" href="static/css/app.css">
+    <link rel="stylesheet" href="static/css/pos.css">
+    <link rel="stylesheet" href="static/fontawesome/css/all.min.css">
+
+    <script type="module" src="static/js/cash/cash-page.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+
+    <aside class="app-sidebar" id="appSidebar"></aside>
+
+    <main class="app-main" id="main">
+
+        <header class="page-header">
+            <div>
+                <h1>Corte de caja</h1>
+                <p class="page-subtitle" id="cashSubtitle" aria-live="polite">Cargando…</p>
+            </div>
+        </header>
+
+        <div class="cash-panels">
+
+            <!-- Caja cerrada: abrir con el fondo inicial -->
+            <form class="card cash-card" id="openForm" novalidate hidden>
+                <h2>Abrir caja</h2>
+                <div class="field">
+                    <label for="openingAmount">Fondo inicial (efectivo con el que empiezas)</label>
+                    <div class="input-prefix">
+                        <span aria-hidden="true">$</span>
+                        <input class="input input-lg" id="openingAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="alert alert-error" id="openError" role="alert" hidden></div>
+                <button type="submit" class="btn btn-primary btn-charge" id="btnOpenCash">Abrir caja</button>
+            </form>
+
+            <!-- Caja abierta: resumen y conteo -->
+            <section class="card cash-card" id="openPanel" aria-labelledby="openPanelTitle" hidden>
+                <h2 id="openPanelTitle">Caja abierta</h2>
+                <dl class="detail-meta" id="openDetails"></dl>
+                <div id="openTotals"></div>
+
+                <form id="closeForm" novalidate>
+                    <div class="field">
+                        <label for="countedAmount">Efectivo contado en la caja</label>
+                        <div class="input-prefix">
+                            <span aria-hidden="true">$</span>
+                            <input class="input input-lg" id="countedAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="closeNotes">Notas (opcional)</label>
+                        <input class="input" id="closeNotes" maxlength="200" placeholder="Ej. Se pagó al proveedor con efectivo">
+                    </div>
+                    <div class="alert alert-error" id="closeError" role="alert" hidden></div>
+                    <button type="submit" class="btn btn-danger btn-charge" id="btnCloseCash">Hacer corte y cerrar caja</button>
+                </form>
+            </section>
+
+            <!-- Resultado del último corte hecho aquí -->
+            <section class="card cash-card" id="resultPanel" aria-labelledby="resultTitle" hidden>
+                <h2 id="resultTitle">Resultado del corte</h2>
+                <div id="resultDetails" aria-live="polite"></div>
+            </section>
+
+        </div>
+
+        <!-- Historial (solo administración) -->
+        <section class="card cash-history manager-only" aria-labelledby="historyTitle">
+            <h2 class="cash-history-title" id="historyTitle">Cortes anteriores</h2>
+            <div class="table-wrap">
+                <table class="data-table" id="historyTable">
+                    <caption class="visually-hidden">Historial de cortes de caja</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Cierre</th>
+                            <th scope="col">Hizo el corte</th>
+                            <th scope="col" class="num">Ventas</th>
+                            <th scope="col" class="num">Esperado</th>
+                            <th scope="col" class="num">Contado</th>
+                            <th scope="col" class="num">Diferencia</th>
+                            <th scope="col">Notas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyRows"></tbody>
+                </table>
+                <div class="empty-state" id="historyEmpty" hidden>
+                    <i class="fa-solid fa-calculator" aria-hidden="true"></i>
+                    <p>Todavía no hay cortes.</p>
+                </div>
+            </div>
+            <nav class="pager" id="historyPager" aria-label="Páginas de cortes" hidden></nav>
+        </section>
+
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
